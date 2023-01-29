@@ -5,6 +5,7 @@ use crate::extract_card_title;
 pub struct FlashCard {
     pub question: String,
     pub answer: String,
+    pub flipped: bool,
 }
 
 impl FlashCard {
@@ -14,7 +15,12 @@ impl FlashCard {
         Self {
             question,
             answer: content,
+            flipped: false,
         }
+    }
+
+    pub fn flip_card(&mut self) {
+        self.flipped = !self.flipped;
     }
 }
 

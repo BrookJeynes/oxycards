@@ -50,9 +50,9 @@ impl Cards {
         }
     }
 
-    pub fn selected(&self) -> &Card {
+    pub fn selected(&mut self) -> &mut Card {
         self.cards
-            .get(self.current_card)
+            .get_mut(self.current_card)
             .expect("Will always return a valid card")
     }
 }
@@ -153,6 +153,30 @@ fn run_app<B: Backend>(
                 // Card navigation keys
                 KeyCode::Char('h') | KeyCode::Left => app_state.cards.previous(),
                 KeyCode::Char('l') | KeyCode::Right => app_state.cards.next(),
+
+                KeyCode::Char(' ') => match app_state.cards.selected() {
+                    Card::FlashCard(card) => card.flip_card(),
+                    _ => {}
+                },
+
+                KeyCode::Char('k') | KeyCode::Up => match app_state.cards.selected() {
+                    Card::MultipleChoice(card) => card.choices.previous(),
+                    Card::MultipleAnswer(card) => card.choices.previous(),
+                    _ => {}
+                },
+                KeyCode::Char('j') | KeyCode::Down => match app_state.cards.selected() {
+                    Card::MultipleChoice(card) => card.choices.next(),
+                    Card::MultipleAnswer(card) => card.choices.next(),
+                    _ => {}
+                },
+                KeyCode::Enter => match app_state.cards.selected() {
+                    Card::MultipleAnswer(card) => {
+                        if let Some(index) = card.choices.selected() {
+                            card.choices.items[index].select()
+                        }
+                    }
+                    _ => {}
+                },
 
                 // Exit keys
                 KeyCode::Char('q') => return Ok(()),

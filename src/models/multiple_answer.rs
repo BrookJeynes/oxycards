@@ -2,9 +2,23 @@ use core::fmt;
 
 use crate::extract_card_title;
 
+use super::stateful_list::StatefulList;
+
+#[derive(Debug)]
+pub struct Choice {
+    pub content: String,
+    pub selected: bool,
+}
+
+impl Choice {
+    pub fn select(&mut self) {
+        self.selected = !self.selected;
+    }
+}
+
 pub struct MultipleAnswer {
     pub question: String,
-    pub choices: Vec<String>,
+    pub choices: StatefulList<Choice>,
     pub answers: Vec<String>,
 }
 
@@ -14,15 +28,24 @@ impl MultipleAnswer {
 
         Self {
             question,
-            choices: MultipleAnswer::remove_prefix(' ', &content),
-            answers: MultipleAnswer::remove_prefix('*', &content),
+            choices: StatefulList::with_items(
+                MultipleAnswer::remove_prefix(vec![' ', '*'], &content)
+                    .iter()
+                    .map(|choice| Choice {
+                        // Todo: maybe don't clone?
+                        content: choice.clone(),
+                        selected: false,
+                    })
+                    .collect(),
+            ),
+            answers: MultipleAnswer::remove_prefix(vec!['*'], &content),
         }
     }
 
-    fn remove_prefix(prefix: char, content: &String) -> Vec<String> {
+    fn remove_prefix(prefix: Vec<char>, content: &String) -> Vec<String> {
         content
             .lines()
-            .filter(|item| item.chars().nth(1).unwrap() == prefix)
+            .filter(|item| prefix.contains(&item.chars().nth(1).unwrap()))
             // Todo: Don't unwrap
             .map(|item| item[3..].trim().to_string())
             .collect()
@@ -34,7 +57,7 @@ impl fmt::Display for MultipleAnswer {
         write!(
             f,
             "Question: {}\nChoices: {:?}\nAnswers: {:?}",
-            self.question, self.choices, self.answers
+            self.question, self.choices.items, self.answers
         )
     }
 }

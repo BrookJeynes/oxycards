@@ -2,9 +2,11 @@ use core::fmt;
 
 use crate::extract_card_title;
 
+use super::stateful_list::StatefulList;
+
 pub struct MultipleChoice {
     pub question: String,
-    pub choices: Vec<String>,
+    pub choices: StatefulList<String>,
     pub answers: Vec<String>,
 }
 
@@ -14,16 +16,19 @@ impl MultipleChoice {
 
         Self {
             question,
-            choices: MultipleChoice::remove_prefix('-', &content),
-            answers: MultipleChoice::remove_prefix('*', &content),
+            choices: StatefulList::with_items(MultipleChoice::remove_prefix(
+                vec!['-', '*'],
+                &content,
+            )),
+            answers: MultipleChoice::remove_prefix(vec!['*'], &content),
         }
     }
 
-    fn remove_prefix(prefix: char, content: &String) -> Vec<String> {
+    fn remove_prefix(prefix: Vec<char>, content: &String) -> Vec<String> {
         content
             .lines()
             // Todo: Don't unwrap
-            .filter(|item| item.chars().nth(0).unwrap() == prefix)
+            .filter(|item| prefix.contains(&item.chars().nth(0).unwrap()))
             .map(|item| item[1..].trim().to_string())
             .collect()
     }
@@ -34,7 +39,7 @@ impl fmt::Display for MultipleChoice {
         write!(
             f,
             "Question: {}\nChoices: {:?}\nAnswers: {:?}",
-            self.question, self.choices, self.answers
+            self.question, self.choices.items, self.answers
         )
     }
 }
