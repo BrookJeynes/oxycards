@@ -1,0 +1,12 @@
+[package]
+name = "quiz-rs"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = "1.7.1"                    # An implementation of regular expressions for Rust. This implementation uses finite automata …
+rand = "0.8.5"              # Random number generators and other randomness functionality. 
+tui = "0.19.0"                    # A library to build rich terminal user interfaces or dashboards 
+crossterm = "0.26.0"            # A crossplatform terminal library for manipulating terminals.
