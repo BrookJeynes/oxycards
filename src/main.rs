@@ -25,6 +25,23 @@ enum ParsingError {
     NoCardType,
 }
 
+#[derive(Debug)]
+pub struct Choice {
+    pub content: String,
+    pub selected: bool,
+}
+
+impl Choice {
+    /// Will flip the current selected status
+    pub fn select(&mut self) {
+        self.selected = !self.selected;
+    }
+
+    pub fn unselect(&mut self) {
+        self.selected = false;
+    }
+}
+
 pub struct Cards {
     pub current_card: usize,
     pub cards: Vec<Card>,
@@ -59,12 +76,16 @@ impl Cards {
 
 pub struct AppState {
     pub cards: Cards,
+    pub incorrect_answers: usize,
+    pub correct_answers: usize,
 }
 
 impl AppState {
     fn new(cards: Vec<Card>) -> Self {
         Self {
             cards: Cards::with_cards(cards),
+            incorrect_answers: 0,
+            correct_answers: 0,
         }
     }
 }
@@ -156,23 +177,54 @@ fn run_app<B: Backend>(
 
                 KeyCode::Char(' ') => match app_state.cards.selected() {
                     Card::FlashCard(card) => card.flip_card(),
+                    Card::MultipleAnswer(card) => {
+                        if let Some(index) = card.choices.selected() {
+                            card.choices.items[index].select()
+                        }
+                    }
+                    Card::MultipleChoice(card) => {
+                        if let Some(index) = card.choices.selected() {
+                            if let None = card.correct_answer {
+                                card.unselect_all();
+
+                                card.choices.items[index].select()
+                            }
+                        }
+                    }
+                    Card::Order(card) => {
+                        if let Some(index) = card.shuffled.selected() {
+                            card.shuffled.items[index].select()
+                        }
+
+                        if let Some((a, b)) = card.multiple_selected() {
+                            card.shuffled.swap(a, b);
+                            card.unselect_all();
+                        }
+                    }
                     _ => {}
                 },
 
                 KeyCode::Char('k') | KeyCode::Up => match app_state.cards.selected() {
                     Card::MultipleChoice(card) => card.choices.previous(),
                     Card::MultipleAnswer(card) => card.choices.previous(),
+                    Card::Order(card) => card.shuffled.previous(),
                     _ => {}
                 },
                 KeyCode::Char('j') | KeyCode::Down => match app_state.cards.selected() {
                     Card::MultipleChoice(card) => card.choices.next(),
                     Card::MultipleAnswer(card) => card.choices.next(),
+                    Card::Order(card) => card.shuffled.next(),
                     _ => {}
                 },
                 KeyCode::Enter => match app_state.cards.selected() {
-                    Card::MultipleAnswer(card) => {
-                        if let Some(index) = card.choices.selected() {
-                            card.choices.items[index].select()
+                    Card::MultipleChoice(card) => {
+                        // BUG - Todo: User can continue to press enter to gain points
+                        if let Some(value) = card.validate_answer() {
+                            if value {
+                                app_state.correct_answers += 1;
+                            } else {
+                                app_state.incorrect_answers += 1;
+                            }
                         }
                     }
                     _ => {}

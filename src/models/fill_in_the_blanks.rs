@@ -3,10 +3,17 @@ use regex::Regex;
 
 use crate::extract_card_title;
 
+#[derive(Debug)]
+pub struct Answer {
+    pub answers: Vec<String>,
+    pub content: String,
+}
+
 pub struct FillInTheBlanks {
     pub question: String,
     pub content: String,
-    pub answers: Vec<String>,
+    pub answers: Vec<Answer>,
+    pub blank_index: usize,
 }
 
 impl FillInTheBlanks {
@@ -19,9 +26,24 @@ impl FillInTheBlanks {
             content: re.replace_all(content.as_ref(), "__").to_string(),
             answers: re
                 .captures_iter(content.as_ref())
-                .map(|capture| capture[1].to_string())
+                .map(|c| {
+                    let capture = c[1].to_string();
+
+                    Answer {
+                        answers: capture
+                            .split("|")
+                            .map(|answer| answer.to_string())
+                            .collect(),
+                        content: String::new(),
+                    }
+                })
                 .collect(),
+            blank_index: 0,
         }
+    }
+
+    fn next(&mut self) {
+        self.blank_index = self.blank_index % self.answers.len();
     }
 }
 

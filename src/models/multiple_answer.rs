@@ -1,20 +1,8 @@
 use core::fmt;
 
-use crate::extract_card_title;
+use crate::{extract_card_title, Choice};
 
 use super::stateful_list::StatefulList;
-
-#[derive(Debug)]
-pub struct Choice {
-    pub content: String,
-    pub selected: bool,
-}
-
-impl Choice {
-    pub fn select(&mut self) {
-        self.selected = !self.selected;
-    }
-}
 
 pub struct MultipleAnswer {
     pub question: String,
