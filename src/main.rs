@@ -16,7 +16,7 @@ use models::card_types::flashcard::FlashCard;
 use models::card_types::multiple_answer::MultipleAnswer;
 use models::card_types::multiple_choice::MultipleChoice;
 use models::card_types::order::Order;
-use models::cards::Cards;
+use models::stateful_list::StatefulList;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 use ui::ui;
@@ -27,7 +27,7 @@ enum ParsingError {
 }
 
 pub struct AppState {
-    pub cards: Cards,
+    pub cards: StatefulList<Card>,
     pub incorrect_answers: usize,
     pub correct_answers: usize,
 }
@@ -35,7 +35,7 @@ pub struct AppState {
 impl AppState {
     fn new(cards: Vec<Card>) -> Self {
         Self {
-            cards: Cards::with_cards(cards),
+            cards: StatefulList::with_items(cards),
             incorrect_answers: 0,
             correct_answers: 0,
         }
@@ -127,60 +127,74 @@ fn run_app<B: Backend>(
                 KeyCode::Char('h') | KeyCode::Left => app_state.cards.previous(),
                 KeyCode::Char('l') | KeyCode::Right => app_state.cards.next(),
 
-                KeyCode::Char(' ') => match app_state.cards.selected() {
-                    Card::FlashCard(card) => card.flip_card(),
-                    Card::MultipleAnswer(card) => {
-                        if let Some(index) = card.choices.selected() {
-                            card.choices.items[index].select()
-                        }
-                    }
-                    Card::MultipleChoice(card) => {
-                        if let Some(index) = card.choices.selected() {
-                            if let None = card.correct_answer {
-                                card.unselect_all();
-
-                                card.choices.items[index].select()
+                KeyCode::Char(' ') => {
+                    if let Some(val) = app_state.cards.selected_value() {
+                        match val {
+                            Card::FlashCard(card) => card.flip_card(),
+                            Card::MultipleAnswer(card) => {
+                                if let Some(index) = card.choices.selected() {
+                                    card.choices.items[index].select()
+                                }
                             }
-                        }
-                    }
-                    Card::Order(card) => {
-                        if let Some(index) = card.shuffled.selected() {
-                            card.shuffled.items[index].select()
-                        }
+                            Card::MultipleChoice(card) => {
+                                if let Some(index) = card.choices.selected() {
+                                    if let None = card.correct_answer {
+                                        card.unselect_all();
 
-                        if let Some((a, b)) = card.multiple_selected() {
-                            card.shuffled.swap(a, b);
-                            card.unselect_all();
-                        }
-                    }
-                    _ => {}
-                },
-
-                KeyCode::Char('k') | KeyCode::Up => match app_state.cards.selected() {
-                    Card::MultipleChoice(card) => card.choices.previous(),
-                    Card::MultipleAnswer(card) => card.choices.previous(),
-                    Card::Order(card) => card.shuffled.previous(),
-                    _ => {}
-                },
-                KeyCode::Char('j') | KeyCode::Down => match app_state.cards.selected() {
-                    Card::MultipleChoice(card) => card.choices.next(),
-                    Card::MultipleAnswer(card) => card.choices.next(),
-                    Card::Order(card) => card.shuffled.next(),
-                    _ => {}
-                },
-                KeyCode::Enter => match app_state.cards.selected() {
-                    // BUG - Todo: User can continue to press enter to gain points
-                    Card::MultipleChoice(card) => {
-                        if let Some(value) = card.validate_answer() {
-                            if value {
-                                app_state.correct_answers += 1;
-                            } else {
-                                app_state.incorrect_answers += 1;
+                                        card.choices.items[index].select()
+                                    }
+                                }
                             }
+                            Card::Order(card) => {
+                                if let Some(index) = card.shuffled.selected() {
+                                    card.shuffled.items[index].select()
+                                }
+
+                                if let Some((a, b)) = card.multiple_selected() {
+                                    card.shuffled.swap(a, b);
+                                    card.unselect_all();
+                                }
+                            }
+                            _ => {}
                         }
                     }
-                    _ => {}
-                },
+                }
+                KeyCode::Char('k') | KeyCode::Up => {
+                    if let Some(val) = app_state.cards.selected_value() {
+                        match val {
+                            Card::MultipleChoice(card) => card.choices.previous(),
+                            Card::MultipleAnswer(card) => card.choices.previous(),
+                            Card::Order(card) => card.shuffled.previous(),
+                            _ => {}
+                        }
+                    }
+                }
+                KeyCode::Char('j') | KeyCode::Down => {
+                    if let Some(val) = app_state.cards.selected_value() {
+                        match val {
+                            Card::MultipleChoice(card) => card.choices.next(),
+                            Card::MultipleAnswer(card) => card.choices.next(),
+                            Card::Order(card) => card.shuffled.next(),
+                            _ => {}
+                        }
+                    }
+                }
+                KeyCode::Enter => {
+                    if let Some(val) = app_state.cards.selected_value() {
+                        match val {
+                            Card::MultipleChoice(card) => {
+                                if let Some(value) = card.validate_answer() {
+                                    if value {
+                                        app_state.correct_answers += 1;
+                                    } else {
+                                        app_state.incorrect_answers += 1;
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
 
                 // Exit keys
                 KeyCode::Char('q') => return Ok(()),

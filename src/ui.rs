@@ -10,7 +10,7 @@ use tui::{
 use crate::{models::card::Card, AppState};
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
-    let card_question;
+    let mut card_question = String::new();
 
     let size = f.size();
 
@@ -55,8 +55,12 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
 
     let cards = Paragraph::new(format!(
         "{}/{}",
-        app_state.cards.current_card + 1,
-        app_state.cards.cards.len()
+        app_state
+            .cards
+            .selected()
+            .expect("This should never be None when this is called.")
+            + 1,
+        app_state.cards.items.len()
     ))
     .alignment(Alignment::Center);
 
@@ -66,151 +70,153 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     ))
     .alignment(Alignment::Right);
 
-    match app_state.cards.selected() {
-        Card::FlashCard(card) => {
-            card_question = card.question.clone();
+    if let Some(val) = app_state.cards.selected_value() {
+        match val {
+            Card::FlashCard(card) => {
+                card_question = card.question.clone();
 
-            let answer = Paragraph::new(if card.flipped {
-                card.answer.to_string()
-            } else {
-                String::new()
-            })
-            .block(create_block("Answer"))
-            .wrap(Wrap { trim: false })
-            .alignment(Alignment::Center);
-
-            let controls = Paragraph::new("SPACE: Show cards back").alignment(Alignment::Left);
-
-            f.render_widget(answer, card_layout[1]);
-            f.render_widget(controls, chunks[2]);
-        }
-        Card::MultipleChoice(card) => {
-            card_question = card.question.clone();
-
-            let choices: Vec<ListItem> = card
-                .choices
-                .items
-                .iter()
-                .map(|choice| {
-                    // Todo: Please for the love of god make this better
-                    ListItem::new({
-                        if choice.selected {
-                            Span::styled(
-                                choice.content.to_string(),
-                                if let Some(value) = card.correct_answer {
-                                    if value {
-                                        Style::default().fg(Color::Green)
-                                    } else {
-                                        Style::default().fg(Color::Red)
-                                    }
-                                } else {
-                                    Style::default().fg(Color::Blue)
-                                },
-                            )
-                        } else {
-                            Span::styled(
-                                choice.content.to_string(),
-                                if let Some(value) = card.correct_answer {
-                                    if card.answers[0] == choice.content && !value {
-                                        Style::default().fg(Color::Green)
-                                    } else {
-                                        Style::default()
-                                    }
-                                } else {
-                                    Style::default()
-                                },
-                            )
-                        }
-                    })
+                let answer = Paragraph::new(if card.flipped {
+                    card.answer.to_string()
+                } else {
+                    String::new()
                 })
-                .collect();
-
-            let choices_list = List::new(choices)
-                .block(create_block("Choices"))
-                .highlight_symbol("> ");
-
-            let controls = Paragraph::new("SPACE: Select choice, ENTER: Validate answer")
-                .alignment(Alignment::Left);
-
-            f.render_stateful_widget(choices_list, card_layout[1], &mut card.choices.state);
-            f.render_widget(controls, chunks[2]);
-        }
-        Card::MultipleAnswer(card) => {
-            card_question = card.question.clone();
-
-            let choices: Vec<ListItem> = card
-                .choices
-                .items
-                .iter()
-                .map(|choice| {
-                    ListItem::new(format!(
-                        "[{}] {}",
-                        if choice.selected { "x" } else { " " },
-                        choice.content.to_string()
-                    ))
-                })
-                .collect();
-
-            let choices_list = List::new(choices)
-                .block(create_block("Choices"))
-                .highlight_symbol("> ");
-
-            let controls =
-                Paragraph::new("SPACE: Select/unselect choice").alignment(Alignment::Left);
-
-            f.render_stateful_widget(choices_list, card_layout[1], &mut card.choices.state);
-            f.render_widget(controls, chunks[2]);
-        }
-        Card::FillInTheBlanks(card) => {
-            card_question = card.question.clone();
-
-            let content = Paragraph::new(card.content.to_string())
-                .block(create_block("Content"))
+                .block(create_block("Answer"))
                 .wrap(Wrap { trim: false })
                 .alignment(Alignment::Center);
 
-            f.render_widget(content, card_layout[1]);
-        }
-        Card::Order(card) => {
-            card_question = card.question.clone();
+                let controls = Paragraph::new("SPACE: Show cards back").alignment(Alignment::Left);
 
-            let choices: Vec<ListItem> = card
-                .shuffled
-                .items
-                .iter()
-                .enumerate()
-                .map(|(i, choice)| {
-                    ListItem::new({
-                        if choice.selected {
-                            Spans::from(vec![
-                                Span::raw(format!("{}. ", i + 1)),
+                f.render_widget(answer, card_layout[1]);
+                f.render_widget(controls, chunks[2]);
+            }
+            Card::MultipleChoice(card) => {
+                card_question = card.question.clone();
+
+                let choices: Vec<ListItem> = card
+                    .choices
+                    .items
+                    .iter()
+                    .map(|choice| {
+                        // Todo: Please for the love of god make this better
+                        ListItem::new({
+                            if choice.selected {
                                 Span::styled(
-                                    format!("{}", choice.content.to_string()),
-                                    Style::default().fg(Color::Blue),
-                                ),
-                            ])
-                        } else {
-                            Spans::from(vec![Span::raw(format!(
-                                "{}. {}",
-                                i + 1,
-                                choice.content.to_string()
-                            ))])
-                        }
+                                    choice.content.to_string(),
+                                    if let Some(value) = card.correct_answer {
+                                        if value {
+                                            Style::default().fg(Color::Green)
+                                        } else {
+                                            Style::default().fg(Color::Red)
+                                        }
+                                    } else {
+                                        Style::default().fg(Color::Blue)
+                                    },
+                                )
+                            } else {
+                                Span::styled(
+                                    choice.content.to_string(),
+                                    if let Some(value) = card.correct_answer {
+                                        if card.answers[0] == choice.content && !value {
+                                            Style::default().fg(Color::Green)
+                                        } else {
+                                            Style::default()
+                                        }
+                                    } else {
+                                        Style::default()
+                                    },
+                                )
+                            }
+                        })
                     })
-                })
-                .collect();
+                    .collect();
 
-            let choices_list = List::new(choices)
-                .block(create_block("Choices"))
-                .highlight_symbol("> ");
+                let choices_list = List::new(choices)
+                    .block(create_block("Choices"))
+                    .highlight_symbol("> ");
 
-            let controls = Paragraph::new(
-                "SPACE: Select first item, press SPACE again on another item to swap",
-            )
-            .alignment(Alignment::Left);
+                let controls = Paragraph::new("SPACE: Select choice, ENTER: Validate answer")
+                    .alignment(Alignment::Left);
 
-            f.render_stateful_widget(choices_list, card_layout[1], &mut card.shuffled.state);
-            f.render_widget(controls, chunks[2]);
+                f.render_stateful_widget(choices_list, card_layout[1], &mut card.choices.state);
+                f.render_widget(controls, chunks[2]);
+            }
+            Card::MultipleAnswer(card) => {
+                card_question = card.question.clone();
+
+                let choices: Vec<ListItem> = card
+                    .choices
+                    .items
+                    .iter()
+                    .map(|choice| {
+                        ListItem::new(format!(
+                            "[{}] {}",
+                            if choice.selected { "x" } else { " " },
+                            choice.content.to_string()
+                        ))
+                    })
+                    .collect();
+
+                let choices_list = List::new(choices)
+                    .block(create_block("Choices"))
+                    .highlight_symbol("> ");
+
+                let controls =
+                    Paragraph::new("SPACE: Select/unselect choice").alignment(Alignment::Left);
+
+                f.render_stateful_widget(choices_list, card_layout[1], &mut card.choices.state);
+                f.render_widget(controls, chunks[2]);
+            }
+            Card::FillInTheBlanks(card) => {
+                card_question = card.question.clone();
+
+                let content = Paragraph::new(card.content.to_string())
+                    .block(create_block("Content"))
+                    .wrap(Wrap { trim: false })
+                    .alignment(Alignment::Center);
+
+                f.render_widget(content, card_layout[1]);
+            }
+            Card::Order(card) => {
+                card_question = card.question.clone();
+
+                let choices: Vec<ListItem> = card
+                    .shuffled
+                    .items
+                    .iter()
+                    .enumerate()
+                    .map(|(i, choice)| {
+                        ListItem::new({
+                            if choice.selected {
+                                Spans::from(vec![
+                                    Span::raw(format!("{}. ", i + 1)),
+                                    Span::styled(
+                                        format!("{}", choice.content.to_string()),
+                                        Style::default().fg(Color::Blue),
+                                    ),
+                                ])
+                            } else {
+                                Spans::from(vec![Span::raw(format!(
+                                    "{}. {}",
+                                    i + 1,
+                                    choice.content.to_string()
+                                ))])
+                            }
+                        })
+                    })
+                    .collect();
+
+                let choices_list = List::new(choices)
+                    .block(create_block("Choices"))
+                    .highlight_symbol("> ");
+
+                let controls = Paragraph::new(
+                    "SPACE: Select first item, press SPACE again on another item to swap",
+                )
+                .alignment(Alignment::Left);
+
+                f.render_stateful_widget(choices_list, card_layout[1], &mut card.shuffled.state);
+                f.render_widget(controls, chunks[2]);
+            }
         }
     };
 
