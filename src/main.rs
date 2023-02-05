@@ -11,11 +11,12 @@ use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use models::card::Card;
-use models::fill_in_the_blanks::FillInTheBlanks;
-use models::flashcard::FlashCard;
-use models::multiple_answer::MultipleAnswer;
-use models::multiple_choice::MultipleChoice;
-use models::order::Order;
+use models::card_types::fill_in_the_blanks::FillInTheBlanks;
+use models::card_types::flashcard::FlashCard;
+use models::card_types::multiple_answer::MultipleAnswer;
+use models::card_types::multiple_choice::MultipleChoice;
+use models::card_types::order::Order;
+use models::cards::Cards;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 use ui::ui;
@@ -23,55 +24,6 @@ use ui::ui;
 #[derive(Debug)]
 enum ParsingError {
     NoCardType,
-}
-
-#[derive(Debug)]
-pub struct Choice {
-    pub content: String,
-    pub selected: bool,
-}
-
-impl Choice {
-    /// Will flip the current selected status
-    pub fn select(&mut self) {
-        self.selected = !self.selected;
-    }
-
-    pub fn unselect(&mut self) {
-        self.selected = false;
-    }
-}
-
-pub struct Cards {
-    pub current_card: usize,
-    pub cards: Vec<Card>,
-}
-
-impl Cards {
-    pub fn with_cards(cards: Vec<Card>) -> Self {
-        Self {
-            current_card: 0,
-            cards,
-        }
-    }
-
-    pub fn next(&mut self) {
-        if self.current_card < self.cards.len() - 1 {
-            self.current_card += 1;
-        }
-    }
-
-    pub fn previous(&mut self) {
-        if self.current_card > 0 {
-            self.current_card -= 1;
-        }
-    }
-
-    pub fn selected(&mut self) -> &mut Card {
-        self.cards
-            .get_mut(self.current_card)
-            .expect("Will always return a valid card")
-    }
 }
 
 pub struct AppState {
@@ -217,8 +169,8 @@ fn run_app<B: Backend>(
                     _ => {}
                 },
                 KeyCode::Enter => match app_state.cards.selected() {
+                    // BUG - Todo: User can continue to press enter to gain points
                     Card::MultipleChoice(card) => {
-                        // BUG - Todo: User can continue to press enter to gain points
                         if let Some(value) = card.validate_answer() {
                             if value {
                                 app_state.correct_answers += 1;
