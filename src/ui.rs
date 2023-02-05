@@ -126,7 +126,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                 .block(create_block("Choices"))
                 .highlight_symbol("> ");
 
-            let controls = Paragraph::new("SPACE: Select choice, ENTER: Validate answer").alignment(Alignment::Left);
+            let controls = Paragraph::new("SPACE: Select choice, ENTER: Validate answer")
+                .alignment(Alignment::Left);
 
             f.render_widget(question, inner_card[0]);
             f.render_stateful_widget(choices_list, inner_card[1], &mut card.choices.state);
@@ -198,11 +199,18 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                                 ),
                             ])
                         } else {
-                            Spans::from(vec![Span::raw(format!(
-                                "{}. {}",
-                                i + 1,
-                                choice.content.to_string()
-                            ))])
+                            Spans::from(vec![Span::styled(
+                                format!("{}. {}", i + 1, choice.content.to_string()),
+                                if let Some(value) = card.correct_answer {
+                                    if value {
+                                        Style::default().fg(Color::Green)
+                                    } else {
+                                        Style::default().fg(Color::Red)
+                                    }
+                                } else {
+                                    Style::default()
+                                },
+                            )])
                         }
                     })
                 })

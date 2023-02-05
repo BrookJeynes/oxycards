@@ -192,13 +192,15 @@ fn run_app<B: Backend>(
                         }
                     }
                     Card::Order(card) => {
-                        if let Some(index) = card.shuffled.selected() {
-                            card.shuffled.items[index].select()
-                        }
+                        if let None = card.correct_answer {
+                            if let Some(index) = card.shuffled.selected() {
+                                card.shuffled.items[index].select()
+                            }
 
-                        if let Some((a, b)) = card.multiple_selected() {
-                            card.shuffled.swap(a, b);
-                            card.unselect_all();
+                            if let Some((a, b)) = card.multiple_selected() {
+                                card.shuffled.swap(a, b);
+                                card.unselect_all();
+                            }
                         }
                     }
                     _ => {}
@@ -216,19 +218,15 @@ fn run_app<B: Backend>(
                     Card::Order(card) => card.shuffled.next(),
                     _ => {}
                 },
-                KeyCode::Enter => match app_state.cards.selected() {
-                    Card::MultipleChoice(card) => {
-                        // BUG - Todo: User can continue to press enter to gain points
-                        if let Some(value) = card.validate_answer() {
-                            if value {
-                                app_state.correct_answers += 1;
-                            } else {
-                                app_state.incorrect_answers += 1;
-                            }
+                KeyCode::Enter => {
+                    if let Some(value) = app_state.cards.selected().validate_answer() {
+                        if value {
+                            app_state.correct_answers += 1;
+                        } else {
+                            app_state.incorrect_answers += 1;
                         }
                     }
-                    _ => {}
-                },
+                }
 
                 // Exit keys
                 KeyCode::Char('q') => return Ok(()),

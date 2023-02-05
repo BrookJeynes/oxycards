@@ -9,6 +9,7 @@ pub struct Order {
     pub question: String,
     pub shuffled: StatefulList<Choice>,
     pub answer: Vec<String>,
+    pub correct_answer: Option<bool>,
 }
 
 impl Order {
@@ -31,6 +32,7 @@ impl Order {
             question,
             shuffled: StatefulList::with_items(shuffled),
             answer: content.lines().map(|line| line[3..].to_string()).collect(),
+            correct_answer: None,
         }
     }
 
@@ -55,6 +57,23 @@ impl Order {
         for choice in self.shuffled.items.iter_mut() {
             choice.unselect();
         }
+    }
+
+    pub fn validate_answer(&mut self) -> Option<bool> {
+        let choices = self
+            .shuffled
+            .items
+            .iter()
+            .map(|item| item.content.to_string())
+            .collect::<Vec<String>>();
+
+        if self.answer == choices {
+            self.correct_answer = Some(true);
+        } else {
+            self.correct_answer = Some(false);
+        }
+
+        self.correct_answer
     }
 }
 

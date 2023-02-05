@@ -22,6 +22,11 @@ impl FlashCard {
     pub fn flip_card(&mut self) {
         self.flipped = !self.flipped;
     }
+
+
+    pub fn validate_answer(&mut self) -> Option<bool> {
+        None
+    }
 }
 
 impl fmt::Display for FlashCard {
