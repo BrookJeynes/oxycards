@@ -45,6 +45,11 @@ impl FillInTheBlanks {
     fn next(&mut self) {
         self.blank_index = self.blank_index % self.answers.len();
     }
+
+    pub fn instructions() -> String {
+        // TODO add instructions
+        return String::from("q: Quit application")
+    }
 }
 
 impl fmt::Display for FillInTheBlanks {

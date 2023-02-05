@@ -38,6 +38,10 @@ impl MultipleAnswer {
             .map(|item| item[3..].trim().to_string())
             .collect()
     }
+
+    pub fn instructions() -> String {
+        return String::from("SPACE: Select/unselect choice")
+    }
 }
 
 impl fmt::Display for MultipleAnswer {

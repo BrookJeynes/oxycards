@@ -56,6 +56,10 @@ impl Order {
             choice.unselect();
         }
     }
+
+    pub fn instructions() -> String {
+        return String::from("SPACE: Select first item, press SPACE again on another item to swap")
+    }
 }
 
 impl fmt::Display for Order {

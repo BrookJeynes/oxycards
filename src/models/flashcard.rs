@@ -19,9 +19,15 @@ impl FlashCard {
         }
     }
 
+
     pub fn flip_card(&mut self) {
         self.flipped = !self.flipped;
     }
+
+    pub fn instructions() -> String {
+        return String::from("SPACE: Show cards back")
+    }
+
 }
 
 impl fmt::Display for FlashCard {
