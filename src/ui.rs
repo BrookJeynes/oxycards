@@ -56,6 +56,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     ))
     .alignment(Alignment::Center);
 
+    let docstr: &str = ", 'Q' to quit.";
+    
     match app_state.cards.selected() {
         Card::FlashCard(card) => {
             let question = Paragraph::new(card.question.to_string())
@@ -72,7 +74,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
             .wrap(Wrap { trim: false })
             .alignment(Alignment::Center);
 
-            let controls = Paragraph::new("SPACE: Show cards back").alignment(Alignment::Left);
+            let controls = Paragraph::new("SPACE: Show cards back".to_owned() + docstr).alignment(Alignment::Left);
 
             f.render_widget(question, inner_card[0]);
             f.render_widget(answer, inner_card[1]);
@@ -126,7 +128,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                 .block(create_block("Choices"))
                 .highlight_symbol("> ");
 
-            let controls = Paragraph::new("SPACE: Select choice, ENTER: Validate answer").alignment(Alignment::Left);
+            let controls = Paragraph::new("SPACE: Select choice, ENTER: Validate answer".to_owned() + docstr).alignment(Alignment::Left);
 
             f.render_widget(question, inner_card[0]);
             f.render_stateful_widget(choices_list, inner_card[1], &mut card.choices.state);
@@ -156,7 +158,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                 .highlight_symbol("> ");
 
             let controls =
-                Paragraph::new("SPACE: Select/unselect choice").alignment(Alignment::Left);
+                Paragraph::new("SPACE: Select/unselect choice".to_owned() + docstr).alignment(Alignment::Left);
 
             f.render_widget(question, inner_card[0]);
             f.render_stateful_widget(choices_list, inner_card[1], &mut card.choices.state);
@@ -213,7 +215,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                 .highlight_symbol("> ");
 
             let controls = Paragraph::new(
-                "SPACE: Select first item, press SPACE again on another item to swap",
+                "SPACE: Select first item, press SPACE again on another item to swap".to_owned() + docstr,
             )
             .alignment(Alignment::Left);
 
