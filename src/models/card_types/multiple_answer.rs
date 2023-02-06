@@ -1,8 +1,9 @@
 use core::fmt;
 
-use crate::{extract_card_title, Choice};
-
-use super::stateful_list::StatefulList;
+use crate::{
+    extract_card_title,
+    models::{choice::Choice, stateful_list::StatefulList},
+};
 
 pub struct MultipleAnswer {
     pub question: String,
@@ -30,11 +31,11 @@ impl MultipleAnswer {
         }
     }
 
+    /// Remove prefix (* | -) from item
     fn remove_prefix(prefix: Vec<char>, content: &String) -> Vec<String> {
         content
             .lines()
             .filter(|item| prefix.contains(&item.chars().nth(1).unwrap()))
-            // Todo: Don't unwrap
             .map(|item| item[3..].trim().to_string())
             .collect()
     }

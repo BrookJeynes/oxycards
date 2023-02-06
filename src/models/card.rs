@@ -1,6 +1,6 @@
 use core::fmt;
 
-use super::{
+use super::card_types::{
     fill_in_the_blanks::FillInTheBlanks, flashcard::FlashCard, multiple_answer::MultipleAnswer,
     multiple_choice::MultipleChoice, order::Order,
 };

@@ -1,9 +1,11 @@
 use core::fmt;
 
-use crate::{extract_card_title, Choice};
-use rand::prelude::SliceRandom;
+use rand::seq::SliceRandom;
 
-use super::stateful_list::StatefulList;
+use crate::{
+    extract_card_title,
+    models::{choice::Choice, stateful_list::StatefulList},
+};
 
 pub struct Order {
     pub question: String,
@@ -34,6 +36,7 @@ impl Order {
         }
     }
 
+    /// Check if there are multiple items currently selected
     pub fn multiple_selected(&self) -> Option<(usize, usize)> {
         let selected: Vec<i32> = self
             .shuffled
@@ -51,6 +54,7 @@ impl Order {
         }
     }
 
+    /// Unselect all items held within the internal vector
     pub fn unselect_all(&mut self) {
         for choice in self.shuffled.items.iter_mut() {
             choice.unselect();
