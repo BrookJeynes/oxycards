@@ -19,6 +19,7 @@ impl FlashCard {
         }
     }
 
+    /// Flip the card
     pub fn flip_card(&mut self) {
         self.flipped = !self.flipped;
     }

@@ -11,11 +11,12 @@ use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use models::card::Card;
-use models::fill_in_the_blanks::FillInTheBlanks;
-use models::flashcard::FlashCard;
-use models::multiple_answer::MultipleAnswer;
-use models::multiple_choice::MultipleChoice;
-use models::order::Order;
+use models::card_types::fill_in_the_blanks::FillInTheBlanks;
+use models::card_types::flashcard::FlashCard;
+use models::card_types::multiple_answer::MultipleAnswer;
+use models::card_types::multiple_choice::MultipleChoice;
+use models::card_types::order::Order;
+use models::stateful_list::StatefulList;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 use ui::ui;
@@ -25,57 +26,8 @@ enum ParsingError {
     NoCardType,
 }
 
-#[derive(Debug)]
-pub struct Choice {
-    pub content: String,
-    pub selected: bool,
-}
-
-impl Choice {
-    /// Will flip the current selected status
-    pub fn select(&mut self) {
-        self.selected = !self.selected;
-    }
-
-    pub fn unselect(&mut self) {
-        self.selected = false;
-    }
-}
-
-pub struct Cards {
-    pub current_card: usize,
-    pub cards: Vec<Card>,
-}
-
-impl Cards {
-    pub fn with_cards(cards: Vec<Card>) -> Self {
-        Self {
-            current_card: 0,
-            cards,
-        }
-    }
-
-    pub fn next(&mut self) {
-        if self.current_card < self.cards.len() - 1 {
-            self.current_card += 1;
-        }
-    }
-
-    pub fn previous(&mut self) {
-        if self.current_card > 0 {
-            self.current_card -= 1;
-        }
-    }
-
-    pub fn selected(&mut self) -> &mut Card {
-        self.cards
-            .get_mut(self.current_card)
-            .expect("Will always return a valid card")
-    }
-}
-
 pub struct AppState {
-    pub cards: Cards,
+    pub cards: StatefulList<Card>,
     pub incorrect_answers: usize,
     pub correct_answers: usize,
 }
@@ -83,7 +35,7 @@ pub struct AppState {
 impl AppState {
     fn new(cards: Vec<Card>) -> Self {
         Self {
-            cards: Cards::with_cards(cards),
+            cards: StatefulList::with_items(cards),
             incorrect_answers: 0,
             correct_answers: 0,
         }
@@ -175,19 +127,14 @@ fn run_app<B: Backend>(
                 KeyCode::Char('h') | KeyCode::Left => app_state.cards.previous(),
                 KeyCode::Char('l') | KeyCode::Right => app_state.cards.next(),
 
-                KeyCode::Char(' ') => match app_state.cards.selected() {
-                    Card::FlashCard(card) => card.flip_card(),
-                    Card::MultipleAnswer(card) => {
-                        if let Some(index) = card.choices.selected() {
-                            card.choices.items[index].select()
-                        }
-                    }
-                    Card::MultipleChoice(card) => {
-                        if let Some(index) = card.choices.selected() {
-                            if let None = card.correct_answer {
-                                card.unselect_all();
-
-                                card.choices.items[index].select()
+                KeyCode::Char(' ') => {
+                    if let Some(val) = app_state.cards.selected_value() {
+                        match val {
+                            Card::FlashCard(card) => card.flip_card(),
+                            Card::MultipleAnswer(card) => {
+                                if let Some(index) = card.choices.selected() {
+                                    card.choices.items[index].select()
+                                }
                             }
                         }
                     }

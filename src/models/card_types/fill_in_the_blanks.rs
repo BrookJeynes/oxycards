@@ -42,6 +42,7 @@ impl FillInTheBlanks {
         }
     }
 
+    /// Move to the next fill-in-the-blank spot
     fn next(&mut self) {
         self.blank_index = self.blank_index % self.answers.len();
     }
