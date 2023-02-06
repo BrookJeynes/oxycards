@@ -143,79 +143,16 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
             Card::MultipleAnswer(card) => {
                 card_question = card.question.clone();
 
-            let choices: Vec<ListItem> = card
-                .choices
-                .items
-                .iter()
-                .map(|choice| {
-                    ListItem::new(format!(
-                        "[{}] {}",
-                        if choice.selected { "x" } else { " " },
-                        choice.content.to_string()
-                    ))
-                })
-                .collect();
-
-            let choices_list = List::new(choices)
-                .block(create_block("Choices"))
-                .highlight_symbol("> ");
-
-            let controls =
-                Paragraph::new("SPACE: Select/unselect choice").alignment(Alignment::Left);
-
-            f.render_widget(question, inner_card[0]);
-            f.render_stateful_widget(choices_list, inner_card[1], &mut card.choices.state);
-            f.render_widget(controls, chunks[2]);
-        }
-        Card::FillInTheBlanks(card) => {
-            let question = Paragraph::new(card.question.to_string())
-                .block(create_block("Question"))
-                .wrap(Wrap { trim: false })
-                .alignment(Alignment::Center);
-
-            let content = Paragraph::new(card.content.to_string())
-                .block(create_block("Content"))
-                .wrap(Wrap { trim: false })
-                .alignment(Alignment::Center);
-
-            f.render_widget(question, inner_card[0]);
-            f.render_widget(content, inner_card[1]);
-        }
-        Card::Order(card) => {
-            let question = Paragraph::new(card.question.to_string())
-                .block(create_block("Question"))
-                .wrap(Wrap { trim: false })
-                .alignment(Alignment::Center);
-
-            let choices: Vec<ListItem> = card
-                .shuffled
-                .items
-                .iter()
-                .enumerate()
-                .map(|(i, choice)| {
-                    ListItem::new({
-                        if choice.selected {
-                            Spans::from(vec![
-                                Span::raw(format!("{}. ", i + 1)),
-                                Span::styled(
-                                    format!("{}", choice.content.to_string()),
-                                    Style::default().fg(Color::Blue),
-                                ),
-                            ])
-                        } else {
-                            Spans::from(vec![Span::styled(
-                                format!("{}. {}", i + 1, choice.content.to_string()),
-                                if let Some(value) = card.correct_answer {
-                                    if value {
-                                        Style::default().fg(Color::Green)
-                                    } else {
-                                        Style::default().fg(Color::Red)
-                                    }
-                                } else {
-                                    Style::default()
-                                },
-                            )])
-                        }
+                let choices: Vec<ListItem> = card
+                    .choices
+                    .items
+                    .iter()
+                    .map(|choice| {
+                        ListItem::new(format!(
+                            "[{}] {}",
+                            if choice.selected { "x" } else { " " },
+                            choice.content.to_string()
+                        ))
                     })
                     .collect();
 
@@ -227,6 +164,62 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     Paragraph::new("SPACE: Select/unselect choice").alignment(Alignment::Left);
 
                 f.render_stateful_widget(choices_list, card_layout[1], &mut card.choices.state);
+                f.render_widget(controls, chunks[2]);
+            }
+            Card::FillInTheBlanks(card) => {
+                card_question = card.question.clone();
+
+                let content = Paragraph::new(card.content.to_string())
+                    .block(create_block("Content"))
+                    .wrap(Wrap { trim: false })
+                    .alignment(Alignment::Center);
+
+                f.render_widget(content, card_layout[1]);
+            }
+            Card::Order(card) => {
+                card_question = card.question.clone();
+
+                let choices: Vec<ListItem> = card
+                    .shuffled
+                    .items
+                    .iter()
+                    .enumerate()
+                    .map(|(i, choice)| {
+                        ListItem::new({
+                            if choice.selected {
+                                Spans::from(vec![
+                                    Span::raw(format!("{}. ", i + 1)),
+                                    Span::styled(
+                                        format!("{}", choice.content.to_string()),
+                                        Style::default().fg(Color::Blue),
+                                    ),
+                                ])
+                            } else {
+                                Spans::from(vec![Span::styled(
+                                    format!("{}. {}", i + 1, choice.content.to_string()),
+                                    if let Some(value) = card.correct_answer {
+                                        if value {
+                                            Style::default().fg(Color::Green)
+                                        } else {
+                                            Style::default().fg(Color::Red)
+                                        }
+                                    } else {
+                                        Style::default()
+                                    },
+                                )])
+                            }
+                        })
+                    })
+                    .collect();
+
+                let choices_list = List::new(choices)
+                    .block(create_block("Choices"))
+                    .highlight_symbol("> ");
+
+                let controls =
+                    Paragraph::new("SPACE: Select/unselect choice").alignment(Alignment::Left);
+
+                f.render_stateful_widget(choices_list, card_layout[1], &mut card.shuffled.state);
                 f.render_widget(controls, chunks[2]);
             }
             Card::FillInTheBlanks(card) => {

@@ -136,41 +136,61 @@ fn run_app<B: Backend>(
                                     card.choices.items[index].select()
                                 }
                             }
+                            Card::MultipleChoice(card) => {
+                                if let None = card.correct_answer {
+                                    if let Some(index) = card.choices.selected() {
+                                        if let None = card.correct_answer {
+                                            card.unselect_all();
+
+                                            card.choices.items[index].select()
+                                        }
+                                    }
+                                }
+                            }
+                            Card::Order(card) => {
+                                if let None = card.correct_answer {
+                                    if let Some(index) = card.shuffled.selected() {
+                                        card.shuffled.items[index].select()
+                                    }
+
+                                    if let Some((a, b)) = card.multiple_selected() {
+                                        card.shuffled.swap(a, b);
+                                        card.unselect_all();
+                                    }
+                                }
+                            }
+                            _ => {}
                         }
                     }
-                    Card::Order(card) => {
-                        if let None = card.correct_answer {
-                            if let Some(index) = card.shuffled.selected() {
-                                card.shuffled.items[index].select()
-                            }
+                }
 
-                            if let Some((a, b)) = card.multiple_selected() {
-                                card.shuffled.swap(a, b);
-                                card.unselect_all();
-                            }
+                KeyCode::Char('k') | KeyCode::Up => {
+                    if let Some(val) = app_state.cards.selected_value() {
+                        match val {
+                            Card::MultipleChoice(card) => card.choices.previous(),
+                            Card::MultipleAnswer(card) => card.choices.previous(),
+                            Card::Order(card) => card.shuffled.previous(),
+                            _ => {}
                         }
                     }
-                    _ => {}
-                },
-
-                KeyCode::Char('k') | KeyCode::Up => match app_state.cards.selected() {
-                    Card::MultipleChoice(card) => card.choices.previous(),
-                    Card::MultipleAnswer(card) => card.choices.previous(),
-                    Card::Order(card) => card.shuffled.previous(),
-                    _ => {}
-                },
-                KeyCode::Char('j') | KeyCode::Down => match app_state.cards.selected() {
-                    Card::MultipleChoice(card) => card.choices.next(),
-                    Card::MultipleAnswer(card) => card.choices.next(),
-                    Card::Order(card) => card.shuffled.next(),
-                    _ => {}
-                },
+                }
+                KeyCode::Char('j') | KeyCode::Down => {
+                    if let Some(val) = app_state.cards.selected_value() {
+                        match val {
+                            Card::MultipleChoice(card) => card.choices.next(),
+                            Card::MultipleAnswer(card) => card.choices.next(),
+                            Card::Order(card) => card.shuffled.next(),
+                            _ => {}
+                        }
+                    }
+                }
                 KeyCode::Enter => {
-                    if let Some(value) = app_state.cards.selected().validate_answer() {
-                        if value {
-                            app_state.correct_answers += 1;
-                        } else {
-                            app_state.incorrect_answers += 1;
+                    if let Some(card) = app_state.cards.selected_value() {
+                        if let Some(val) = card.validate_answer() {
+                            match val {
+                                true => app_state.correct_answers += 1,
+                                false => app_state.incorrect_answers += 1,
+                            }
                         }
                     }
                 }
