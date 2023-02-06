@@ -13,6 +13,19 @@ pub enum Card {
     Order(Order),
 }
 
+impl Card {
+    // maybe a better way to do this?
+    pub fn validate_answer(&mut self) -> Option<bool> {
+        match self {
+            Self::FlashCard(card) => card.validate_answer(),
+            Self::MultipleChoice(card) => card.validate_answer(),
+            Self::MultipleAnswer(card) => card.validate_answer(),
+            Self::FillInTheBlanks(card) => card.validate_answer(),
+            Self::Order(card) => card.validate_answer(),
+        }
+    }
+}
+
 impl fmt::Display for Card {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

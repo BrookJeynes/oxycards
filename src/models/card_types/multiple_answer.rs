@@ -39,6 +39,11 @@ impl MultipleAnswer {
             .map(|item| item[3..].trim().to_string())
             .collect()
     }
+
+
+    pub fn validate_answer(&mut self) -> Option<bool> {
+        None
+    }
 }
 
 impl fmt::Display for MultipleAnswer {

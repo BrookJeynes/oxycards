@@ -21,6 +21,11 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
             .title(title.to_string())
     };
 
+    // A helper closure to create styled spans
+    let create_styled_span = |content: &str, colour: Color| -> Span {
+        Span::styled(content.to_string(), Style::default().fg(colour))
+    };
+
     // The main canvas
     let chunks = Layout::default()
         .horizontal_margin(2)
@@ -47,9 +52,9 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
         .split(card_layout[1]);
 
     // Create card footer content
-    let incorrect = Paragraph::new(Span::styled(
-        app_state.incorrect_answers.to_string(),
-        Style::default().fg(Color::Red),
+    let incorrect = Paragraph::new(create_styled_span(
+        app_state.incorrect_answers.to_string().as_ref(),
+        Color::Red,
     ))
     .alignment(Alignment::Left);
 
@@ -97,32 +102,31 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .items
                     .iter()
                     .map(|choice| {
-                        // Todo: Please for the love of god make this better
                         ListItem::new({
                             if choice.selected {
-                                Span::styled(
-                                    choice.content.to_string(),
+                                create_styled_span(
+                                    choice.content.as_ref(),
                                     if let Some(value) = card.correct_answer {
                                         if value {
-                                            Style::default().fg(Color::Green)
+                                            Color::Green
                                         } else {
-                                            Style::default().fg(Color::Red)
+                                            Color::Red
                                         }
                                     } else {
-                                        Style::default().fg(Color::Blue)
+                                        Color::Blue
                                     },
                                 )
                             } else {
-                                Span::styled(
-                                    choice.content.to_string(),
+                                create_styled_span(
+                                    choice.content.as_ref(),
                                     if let Some(value) = card.correct_answer {
                                         if card.answers[0] == choice.content && !value {
-                                            Style::default().fg(Color::Green)
+                                            Color::Green
                                         } else {
-                                            Style::default()
+                                            Color::White
                                         }
                                     } else {
-                                        Style::default()
+                                        Color::White
                                     },
                                 )
                             }
@@ -189,17 +193,24 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                             if choice.selected {
                                 Spans::from(vec![
                                     Span::raw(format!("{}. ", i + 1)),
-                                    Span::styled(
-                                        format!("{}", choice.content.to_string()),
-                                        Style::default().fg(Color::Blue),
+                                    create_styled_span(
+                                        format!("{}", choice.content).as_ref(),
+                                        Color::Blue,
                                     ),
                                 ])
                             } else {
-                                Spans::from(vec![Span::raw(format!(
-                                    "{}. {}",
-                                    i + 1,
-                                    choice.content.to_string()
-                                ))])
+                                Spans::from(vec![create_styled_span(
+                                    format!("{}. {}", i + 1, choice.content).as_ref(),
+                                    if let Some(value) = card.correct_answer {
+                                        if value {
+                                            Color::Green
+                                        } else {
+                                            Color::Red
+                                        }
+                                    } else {
+                                        Color::White
+                                    },
+                                )])
                             }
                         })
                     })
@@ -209,10 +220,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .block(create_block("Choices"))
                     .highlight_symbol("> ");
 
-                let controls = Paragraph::new(
-                    "SPACE: Select first item, press SPACE again on another item to swap",
-                )
-                .alignment(Alignment::Left);
+                let controls =
+                    Paragraph::new("SPACE: Select/unselect choice").alignment(Alignment::Left);
 
                 f.render_stateful_widget(choices_list, card_layout[1], &mut card.shuffled.state);
                 f.render_widget(controls, chunks[2]);

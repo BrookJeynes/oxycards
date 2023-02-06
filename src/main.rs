@@ -137,28 +137,33 @@ fn run_app<B: Backend>(
                                 }
                             }
                             Card::MultipleChoice(card) => {
-                                if let Some(index) = card.choices.selected() {
-                                    if let None = card.correct_answer {
-                                        card.unselect_all();
+                                if let None = card.correct_answer {
+                                    if let Some(index) = card.choices.selected() {
+                                        if let None = card.correct_answer {
+                                            card.unselect_all();
 
-                                        card.choices.items[index].select()
+                                            card.choices.items[index].select()
+                                        }
                                     }
                                 }
                             }
                             Card::Order(card) => {
-                                if let Some(index) = card.shuffled.selected() {
-                                    card.shuffled.items[index].select()
-                                }
+                                if let None = card.correct_answer {
+                                    if let Some(index) = card.shuffled.selected() {
+                                        card.shuffled.items[index].select()
+                                    }
 
-                                if let Some((a, b)) = card.multiple_selected() {
-                                    card.shuffled.swap(a, b);
-                                    card.unselect_all();
+                                    if let Some((a, b)) = card.multiple_selected() {
+                                        card.shuffled.swap(a, b);
+                                        card.unselect_all();
+                                    }
                                 }
                             }
                             _ => {}
                         }
                     }
                 }
+
                 KeyCode::Char('k') | KeyCode::Up => {
                     if let Some(val) = app_state.cards.selected_value() {
                         match val {
@@ -180,18 +185,12 @@ fn run_app<B: Backend>(
                     }
                 }
                 KeyCode::Enter => {
-                    if let Some(val) = app_state.cards.selected_value() {
-                        match val {
-                            Card::MultipleChoice(card) => {
-                                if let Some(value) = card.validate_answer() {
-                                    if value {
-                                        app_state.correct_answers += 1;
-                                    } else {
-                                        app_state.incorrect_answers += 1;
-                                    }
-                                }
+                    if let Some(card) = app_state.cards.selected_value() {
+                        if let Some(val) = card.validate_answer() {
+                            match val {
+                                true => app_state.correct_answers += 1,
+                                false => app_state.incorrect_answers += 1,
                             }
-                            _ => {}
                         }
                     }
                 }

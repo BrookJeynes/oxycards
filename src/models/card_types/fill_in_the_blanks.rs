@@ -46,6 +46,10 @@ impl FillInTheBlanks {
     fn next(&mut self) {
         self.blank_index = self.blank_index % self.answers.len();
     }
+
+    pub fn validate_answer(&mut self) -> Option<bool> {
+        None
+    }
 }
 
 impl fmt::Display for FillInTheBlanks {
