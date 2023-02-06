@@ -40,6 +40,9 @@ impl MultipleAnswer {
             .collect()
     }
 
+    pub fn instructions() -> String {
+        return String::from("SPACE: Select/unselect choice")
+    }
 
     pub fn validate_answer(&mut self) -> Option<bool> {
         None
