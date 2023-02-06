@@ -19,7 +19,7 @@ impl FlashCard {
         }
     }
 
-
+    /// Flip the card
     pub fn flip_card(&mut self) {
         self.flipped = !self.flipped;
     }
@@ -28,6 +28,9 @@ impl FlashCard {
         return String::from("SPACE: Show cards back")
     }
 
+    pub fn validate_answer(&mut self) -> Option<bool> {
+        None
+    }
 }
 
 impl fmt::Display for FlashCard {

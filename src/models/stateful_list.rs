@@ -60,12 +60,24 @@ impl<T> StatefulList<T> {
         self.items.swap(a, b);
     }
 
-    /// Return the current selected item.
+    /// Return the selected items index.
     pub fn selected(&self) -> Option<usize> {
         if self.items.is_empty() {
             return None;
         }
 
         self.state.selected()
+    }
+
+    /// Return the selected items value.
+    pub fn selected_value(&mut self) -> Option<&mut T> {
+        match self.selected() {
+            Some(index) => Some(
+                self.items
+                    .get_mut(index)
+                    .expect("Will always return a valid card"),
+            ),
+            None => None,
+        }
     }
 }

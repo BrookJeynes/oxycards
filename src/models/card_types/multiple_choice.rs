@@ -1,8 +1,9 @@
 use core::fmt;
 
-use crate::{extract_card_title, Choice};
-
-use super::stateful_list::StatefulList;
+use crate::{
+    extract_card_title,
+    models::{choice::Choice, stateful_list::StatefulList},
+};
 
 pub struct MultipleChoice {
     pub question: String,
@@ -32,6 +33,7 @@ impl MultipleChoice {
         }
     }
 
+    /// Remove prefix (* | -) from item
     fn remove_prefix(prefix: Vec<char>, content: &String) -> Vec<String> {
         content
             .lines()
@@ -41,12 +43,14 @@ impl MultipleChoice {
             .collect()
     }
 
+    /// Unselect all items held within the internal vector
     pub fn unselect_all(&mut self) {
         for choice in self.choices.items.iter_mut() {
             choice.unselect();
         }
     }
 
+    /// Validate the users current answer
     pub fn validate_answer(&mut self) -> Option<bool> {
         let choices = self
             .choices
