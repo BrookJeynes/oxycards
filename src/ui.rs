@@ -222,57 +222,6 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                 f.render_stateful_widget(choices_list, card_layout[1], &mut card.shuffled.state);
                 f.render_widget(controls, chunks[2]);
             }
-            Card::FillInTheBlanks(card) => {
-                card_question = card.question.clone();
-
-                let content = Paragraph::new(card.content.to_string())
-                    .block(create_block("Content"))
-                    .wrap(Wrap { trim: false })
-                    .alignment(Alignment::Center);
-
-                f.render_widget(content, card_layout[1]);
-            }
-            Card::Order(card) => {
-                card_question = card.question.clone();
-
-                let choices: Vec<ListItem> = card
-                    .shuffled
-                    .items
-                    .iter()
-                    .enumerate()
-                    .map(|(i, choice)| {
-                        ListItem::new({
-                            if choice.selected {
-                                Spans::from(vec![
-                                    Span::raw(format!("{}. ", i + 1)),
-                                    Span::styled(
-                                        format!("{}", choice.content.to_string()),
-                                        Style::default().fg(Color::Blue),
-                                    ),
-                                ])
-                            } else {
-                                Spans::from(vec![Span::raw(format!(
-                                    "{}. {}",
-                                    i + 1,
-                                    choice.content.to_string()
-                                ))])
-                            }
-                        })
-                    })
-                    .collect();
-
-                let choices_list = List::new(choices)
-                    .block(create_block("Choices"))
-                    .highlight_symbol("> ");
-
-                let controls = Paragraph::new(
-                    "SPACE: Select first item, press SPACE again on another item to swap",
-                )
-                .alignment(Alignment::Left);
-
-                f.render_stateful_widget(choices_list, card_layout[1], &mut card.shuffled.state);
-                f.render_widget(controls, chunks[2]);
-            }
         }
     };
 
