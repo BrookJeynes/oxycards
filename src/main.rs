@@ -137,10 +137,12 @@ fn run_app<B: Backend>(
                 KeyCode::Char(' ') => {
                     if let Some(val) = app_state.cards.selected_value() {
                         match val {
-                            Card::FlashCard(card) => card.flip_card(),
+                            Card::FlashCard(card) => card.show_back(),
                             Card::MultipleAnswer(card) => {
-                                if let Some(index) = card.choices.selected() {
-                                    card.choices.items[index].select()
+                                if let None = card.correct_answer {
+                                    if let Some(index) = card.choices.selected() {
+                                        card.choices.items[index].select()
+                                    }
                                 }
                             }
                             Card::MultipleChoice(card) => {
@@ -197,6 +199,34 @@ fn run_app<B: Backend>(
                                 UserAnswer::Incorrect => app_state.incorrect_answers += 1,
                                 UserAnswer::Undecided => {}
                             }
+                        }
+                    }
+                }
+                KeyCode::Char('y') => {
+                    if let Some(val) = app_state.cards.selected_value() {
+                        match val {
+                            Card::FlashCard(card) => {
+                                if card.show_validation_popup && !card.answered {
+                                    card.answered = true;
+                                    app_state.correct_answers += 1
+                                }
+                            }
+
+                            _ => {}
+                        }
+                    }
+                }
+                KeyCode::Char('n') => {
+                    if let Some(val) = app_state.cards.selected_value() {
+                        match val {
+                            Card::FlashCard(card) => {
+                                if card.show_validation_popup && !card.answered {
+                                    card.answered = true;
+                                    app_state.incorrect_answers += 1
+                                }
+                            }
+
+                            _ => {}
                         }
                     }
                 }

@@ -1,9 +1,9 @@
 use tui::{
     backend::Backend,
-    layout::{Alignment, Constraint, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Span, Spans},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
     Frame,
 };
 
@@ -98,6 +98,16 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
 
                 let controls = Paragraph::new(FlashCard::instructions()).alignment(Alignment::Left);
 
+                if card.show_validation_popup {
+                    let area = centered_rect(60, 20, size);
+                    let paragraph = Paragraph::new("Did you get this card correct? y/n")
+                        .block(create_block("Validate"))
+                        .alignment(Alignment::Center);
+
+                    f.render_widget(Clear, area); //this clears out the background
+                    f.render_widget(paragraph, area);
+                }
+
                 f.render_widget(answer, card_layout[1]);
                 f.render_widget(controls, chunks[2]);
             }
@@ -108,30 +118,22 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .items
                     .iter()
                     .map(|choice| {
-                        ListItem::new({
-                            if choice.selected {
-                                create_styled_span(
-                                    choice.content.as_ref(),
-                                    match card.user_answer {
-                                        UserAnswer::Undecided => Color::Blue,
-                                        UserAnswer::Correct => Color::Green,
-                                        UserAnswer::Incorrect => Color::Red,
-                                    },
-                                )
-                            } else {
-                                create_styled_span(
-                                    choice.content.as_ref(),
-                                    match card.user_answer {
-                                        UserAnswer::Incorrect
-                                            if card.answers[0] == choice.content =>
-                                        {
-                                            Color::Green
-                                        }
-                                        _ => Color::White,
-                                    },
-                                )
-                            }
-                        })
+                        ListItem::new(create_styled_span(
+                            choice.content.as_ref(),
+                            match choice.selected {
+                                true => match card.user_answer {
+                                  UserAnswer::Correct => Color::Green,
+                                  UserAnswer::Incorrect => Color::Red,
+                                  UserAnswer::Undecided => Color::Blue,
+                                },
+                                false => match card.user_answer {
+                                    UserAnswer::Incorrect if card.answers.contains(&choice.content) => {
+                                        Color::Green
+                                    }
+                                    _ => Color::White,
+                                },
+                            },
+                        ))
                     })
                     .collect();
 
@@ -152,12 +154,22 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .choices
                     .items
                     .iter()
-                    .map(|choice| {
-                        ListItem::new(format!(
-                            "[{}] {}",
-                            if choice.selected { "x" } else { " " },
-                            choice.content.to_string()
-                        ))
+                    .map(|choice| match choice.selected {
+                        true => ListItem::new(create_styled_span(
+                            format!("[x] {}", choice.content).as_str(),
+                            match card.correct_answer {
+                                Some(true) => Color::Green,
+                                Some(false) => Color::Red,
+                                None => Color::White,
+                            },
+                        )),
+                        false => ListItem::new(create_styled_span(
+                            format!("[ ] {}", choice.content).as_str(),
+                            match card.correct_answer {
+                                Some(_) if card.answers.contains(&choice.content) => Color::Green,
+                                _ => Color::White,
+                            },
+                        )),
                     })
                     .collect();
 
@@ -188,27 +200,19 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .items
                     .iter()
                     .enumerate()
-                    .map(|(i, choice)| {
-                        ListItem::new({
-                            if choice.selected {
-                                Spans::from(vec![
-                                    Span::raw(format!("{}. ", i + 1)),
-                                    create_styled_span(
-                                        format!("{}", choice.content).as_ref(),
-                                        Color::Blue,
-                                    ),
-                                ])
-                            } else {
-                                Spans::from(vec![create_styled_span(
-                                    format!("{}. {}", i + 1, choice.content).as_ref(),
-                                    match card.user_answer {
-                                        UserAnswer::Undecided => Color::White,
-                                        UserAnswer::Correct => Color::Green,
-                                        UserAnswer::Incorrect => Color::Red,
-                                    },
-                                )])
-                            }
-                        })
+                    .map(|(i, choice)| match choice.selected {
+                        true => ListItem::new(Spans::from(vec![
+                            Span::raw(format!("{}. ", i + 1)),
+                            create_styled_span(format!("{}", choice.content).as_ref(), Color::Blue),
+                        ])),
+                        false => ListItem::new(Spans::from(vec![create_styled_span(
+                            format!("{}. {}", i + 1, choice.content).as_ref(),
+                            match card.user_answer {
+                              UserAnswer::Correct => Color::Green,
+                              UserAnswer::Incorrect => Color::Red,
+                              UserAnswer::Undecided => Color::White,
+                          },
+                        )])),
                     })
                     .collect();
 
@@ -237,4 +241,31 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     f.render_widget(incorrect, inner_card_layout[1]);
     f.render_widget(cards, inner_card_layout[1]);
     f.render_widget(correct, inner_card_layout[1]);
+}
+
+/// helper function to create a centered rect using up certain percentage of the available rect `r`
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
 }
