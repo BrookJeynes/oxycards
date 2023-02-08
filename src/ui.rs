@@ -1,9 +1,9 @@
 use tui::{
     backend::Backend,
-    layout::{Alignment, Constraint, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Span, Spans},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
     Frame,
 };
 
@@ -89,7 +89,17 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                 .wrap(Wrap { trim: false })
                 .alignment(Alignment::Center);
 
-                let controls = Paragraph::new("SPACE: Show cards back").alignment(Alignment::Left);
+                let controls = Paragraph::new("SPACE: Show cards back, ENTER: Validate answer").alignment(Alignment::Left);
+
+                if card.show_validation_popup {
+                    let area = centered_rect(60, 20, size);
+                    let paragraph = Paragraph::new("Did you get this card correct? y/n")
+                        .block(create_block("Validate"))
+                        .alignment(Alignment::Center);
+
+                    f.render_widget(Clear, area); //this clears out the background
+                    f.render_widget(paragraph, area);
+                }
 
                 f.render_widget(answer, card_layout[1]);
                 f.render_widget(controls, chunks[2]);
@@ -242,4 +252,31 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     f.render_widget(incorrect, inner_card_layout[1]);
     f.render_widget(cards, inner_card_layout[1]);
     f.render_widget(correct, inner_card_layout[1]);
+}
+
+/// helper function to create a centered rect using up certain percentage of the available rect `r`
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
 }

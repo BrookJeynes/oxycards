@@ -6,6 +6,9 @@ pub struct FlashCard {
     pub question: String,
     pub answer: String,
     pub flipped: bool,
+    pub show_validation_popup: bool,
+    /// Has the card been validated/answered
+    pub answered: bool,
 }
 
 impl FlashCard {
@@ -16,7 +19,15 @@ impl FlashCard {
             question,
             answer: content,
             flipped: false,
+
+            show_validation_popup: false,
+            answered: false,
         }
+    }
+
+    /// Flip card over to show the back.
+    pub fn show_back(&mut self) {
+        self.flipped = true;
     }
 
     /// Flip the card
@@ -24,8 +35,9 @@ impl FlashCard {
         self.flipped = !self.flipped;
     }
 
-
     pub fn validate_answer(&mut self) -> Option<bool> {
+        self.show_validation_popup = !self.show_validation_popup;
+
         None
     }
 }
