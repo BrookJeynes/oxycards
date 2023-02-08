@@ -132,8 +132,10 @@ fn run_app<B: Backend>(
                         match val {
                             Card::FlashCard(card) => card.flip_card(),
                             Card::MultipleAnswer(card) => {
-                                if let Some(index) = card.choices.selected() {
-                                    card.choices.items[index].select()
+                                if let None = card.correct_answer {
+                                    if let Some(index) = card.choices.selected() {
+                                        card.choices.items[index].select()
+                                    }
                                 }
                             }
                             Card::MultipleChoice(card) => {

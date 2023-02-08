@@ -9,6 +9,9 @@ pub struct MultipleAnswer {
     pub question: String,
     pub choices: StatefulList<Choice>,
     pub answers: Vec<String>,
+    pub answered: bool,
+
+    pub correct_answer: Option<bool>,
 }
 
 impl MultipleAnswer {
@@ -28,6 +31,8 @@ impl MultipleAnswer {
                     .collect(),
             ),
             answers: MultipleAnswer::remove_prefix(vec!['*'], &content),
+            answered: false,
+            correct_answer: None,
         }
     }
 
@@ -41,11 +46,27 @@ impl MultipleAnswer {
     }
 
     pub fn instructions() -> String {
-        return String::from("SPACE: Select/unselect choice")
+        return String::from("SPACE: Select/unselect choice");
     }
 
     pub fn validate_answer(&mut self) -> Option<bool> {
-        None
+        let choices = self
+            .choices
+            .items
+            .iter()
+            .filter(|item| item.selected)
+            .map(|item| item.content.to_string())
+            .collect::<Vec<String>>();
+
+        if choices.is_empty() {
+            self.correct_answer = None;
+        } else if self.answers == choices {
+            self.correct_answer = Some(true);
+        } else {
+            self.correct_answer = Some(false);
+        }
+
+        self.correct_answer
     }
 }
 
