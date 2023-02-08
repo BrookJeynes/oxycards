@@ -3,15 +3,14 @@ use core::fmt;
 use crate::{
     extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
+    UserAnswer,
 };
 
 pub struct MultipleAnswer {
     pub question: String,
     pub choices: StatefulList<Choice>,
     pub answers: Vec<String>,
-    pub answered: bool,
-
-    pub correct_answer: Option<bool>,
+    pub user_answer: UserAnswer,
 }
 
 impl MultipleAnswer {
@@ -31,8 +30,7 @@ impl MultipleAnswer {
                     .collect(),
             ),
             answers: MultipleAnswer::remove_prefix(vec!['*'], &content),
-            answered: false,
-            correct_answer: None,
+            user_answer: UserAnswer::Undecided,
         }
     }
 
@@ -49,7 +47,7 @@ impl MultipleAnswer {
         return String::from("SPACE: Select/unselect choice");
     }
 
-    pub fn validate_answer(&mut self) -> Option<bool> {
+    pub fn validate_answer(&mut self) -> UserAnswer {
         let choices = self
             .choices
             .items
@@ -58,15 +56,19 @@ impl MultipleAnswer {
             .map(|item| item.content.to_string())
             .collect::<Vec<String>>();
 
-        if choices.is_empty() {
-            self.correct_answer = None;
-        } else if self.answers == choices {
-            self.correct_answer = Some(true);
+        self.user_answer = if choices.is_empty() {
+            UserAnswer::Undecided
+        } else if choices == self.answers {
+            UserAnswer::Correct
         } else {
-            self.correct_answer = Some(false);
-        }
+            UserAnswer::Incorrect
+        };
 
-        self.correct_answer
+        self.user_answer
+    }
+
+    pub fn check_answered(&self) -> bool {
+        self.user_answer != UserAnswer::Undecided
     }
 }
 

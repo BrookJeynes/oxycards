@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::extract_card_title;
+use crate::{extract_card_title, UserAnswer};
 
 pub struct FlashCard {
     pub question: String,
@@ -8,7 +8,7 @@ pub struct FlashCard {
     pub flipped: bool,
     pub show_validation_popup: bool,
     /// Has the card been validated/answered
-    pub answered: bool,
+    pub user_answer: UserAnswer,
 }
 
 impl FlashCard {
@@ -21,7 +21,7 @@ impl FlashCard {
             flipped: false,
 
             show_validation_popup: false,
-            answered: false,
+            user_answer: UserAnswer::Undecided,
         }
     }
 
@@ -39,10 +39,14 @@ impl FlashCard {
         return String::from("SPACE: Show cards back")
     }
 
-    pub fn validate_answer(&mut self) -> Option<bool> {
+    pub fn validate_answer(&mut self) -> UserAnswer {
         self.show_validation_popup = !self.show_validation_popup;
 
-        None
+        UserAnswer::Undecided
+    }
+
+    pub fn check_answered(&self) -> bool {
+        self.user_answer != UserAnswer::Undecided
     }
 }
 

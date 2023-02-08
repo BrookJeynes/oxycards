@@ -5,13 +5,15 @@ use rand::seq::SliceRandom;
 use crate::{
     extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
+    UserAnswer,
 };
 
 pub struct Order {
     pub question: String,
     pub shuffled: StatefulList<Choice>,
     pub answer: Vec<String>,
-    pub correct_answer: Option<bool>,
+
+    pub user_answer: UserAnswer,
 }
 
 impl Order {
@@ -34,7 +36,7 @@ impl Order {
             question,
             shuffled: StatefulList::with_items(shuffled),
             answer: content.lines().map(|line| line[3..].to_string()).collect(),
-            correct_answer: None,
+            user_answer: UserAnswer::Undecided,
         }
     }
 
@@ -64,10 +66,10 @@ impl Order {
     }
 
     pub fn instructions() -> String {
-        return String::from("SPACE: Select first item, press SPACE again on another item to swap")
+        return String::from("SPACE: Select first item, press SPACE again on another item to swap");
     }
 
-    pub fn validate_answer(&mut self) -> Option<bool> {
+    pub fn validate_answer(&mut self) -> UserAnswer {
         let choices = self
             .shuffled
             .items
@@ -75,13 +77,17 @@ impl Order {
             .map(|item| item.content.to_string())
             .collect::<Vec<String>>();
 
-        if self.answer == choices {
-            self.correct_answer = Some(true);
+        self.user_answer = if choices == self.answer {
+            UserAnswer::Correct
         } else {
-            self.correct_answer = Some(false);
-        }
+            UserAnswer::Incorrect
+        };
 
-        self.correct_answer
+        self.user_answer
+    }
+
+    pub fn check_answered(&self) -> bool {
+        self.user_answer != UserAnswer::Undecided
     }
 }
 

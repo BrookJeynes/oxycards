@@ -3,13 +3,15 @@ use core::fmt;
 use crate::{
     extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
+    UserAnswer,
 };
 
 pub struct MultipleChoice {
     pub question: String,
     pub choices: StatefulList<Choice>,
     pub answers: Vec<String>,
-    pub correct_answer: Option<bool>,
+
+    pub user_answer: UserAnswer,
 }
 
 impl MultipleChoice {
@@ -29,7 +31,7 @@ impl MultipleChoice {
                     .collect(),
             ),
             answers: MultipleChoice::remove_prefix(vec!['*'], &content),
-            correct_answer: None,
+            user_answer: UserAnswer::Undecided,
         }
     }
 
@@ -51,7 +53,7 @@ impl MultipleChoice {
     }
 
     /// Validate the users current answer
-    pub fn validate_answer(&mut self) -> Option<bool> {
+    pub fn validate_answer(&mut self) -> UserAnswer {
         let choices = self
             .choices
             .items
@@ -60,19 +62,23 @@ impl MultipleChoice {
             .map(|item| item.content.to_string())
             .collect::<Vec<String>>();
 
-        if choices.is_empty() {
-            self.correct_answer = None;
-        } else if self.answers == choices {
-            self.correct_answer = Some(true);
+        self.user_answer = if choices.is_empty() {
+            UserAnswer::Undecided
+        } else if choices == self.answers {
+            UserAnswer::Correct
         } else {
-            self.correct_answer = Some(false);
-        }
+            UserAnswer::Incorrect
+        };
 
-        self.correct_answer
+        self.user_answer
     }
 
     pub fn instructions() -> String {
-        return String::from("SPACE: Select choice, ENTER: Validate answer")
+        return String::from("SPACE: Select choice, ENTER: Validate answer");
+    }
+
+    pub fn check_answered(&self) -> bool {
+        self.user_answer != UserAnswer::Undecided
     }
 }
 

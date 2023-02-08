@@ -8,8 +8,8 @@ use tui::{
 };
 
 use crate::{
-    models::card::Card,
     models::card_types::{flashcard::FlashCard, multiple_choice::MultipleChoice, order::Order},
+    models::{card::Card, user_answer::UserAnswer},
     AppState,
 };
 
@@ -118,13 +118,15 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                         ListItem::new(create_styled_span(
                             choice.content.as_ref(),
                             match choice.selected {
-                                true => match card.correct_answer {
-                                    Some(true) => Color::Green,
-                                    Some(false) => Color::Red,
-                                    _ => Color::Blue,
+                                true => match card.user_answer {
+                                    UserAnswer::Correct => Color::Green,
+                                    UserAnswer::Incorrect => Color::Red,
+                                    UserAnswer::Undecided => Color::Blue,
                                 },
-                                false => match card.correct_answer {
-                                    Some(_) if card.answers.contains(&choice.content) => {
+                                false => match card.user_answer {
+                                    UserAnswer::Incorrect
+                                        if card.answers.contains(&choice.content) =>
+                                    {
                                         Color::Green
                                     }
                                     _ => Color::White,
@@ -154,16 +156,18 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .map(|choice| match choice.selected {
                         true => ListItem::new(create_styled_span(
                             format!("[x] {}", choice.content).as_str(),
-                            match card.correct_answer {
-                                Some(true) => Color::Green,
-                                Some(false) => Color::Red,
-                                None => Color::White,
+                            match card.user_answer {
+                                UserAnswer::Correct => Color::Green,
+                                UserAnswer::Incorrect => Color::Red,
+                                UserAnswer::Undecided => Color::White,
                             },
                         )),
                         false => ListItem::new(create_styled_span(
                             format!("[ ] {}", choice.content).as_str(),
-                            match card.correct_answer {
-                                Some(_) if card.answers.contains(&choice.content) => Color::Green,
+                            match card.user_answer {
+                                UserAnswer::Correct if card.answers.contains(&choice.content) => {
+                                    Color::Green
+                                }
                                 _ => Color::White,
                             },
                         )),
@@ -204,10 +208,10 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                         ])),
                         false => ListItem::new(Spans::from(vec![create_styled_span(
                             format!("{}. {}", i + 1, choice.content).as_ref(),
-                            match card.correct_answer {
-                                Some(true) => Color::Green,
-                                Some(false) => Color::Red,
-                                _ => Color::White,
+                            match card.user_answer {
+                                UserAnswer::Correct => Color::Green,
+                                UserAnswer::Incorrect => Color::Red,
+                                UserAnswer::Undecided => Color::White,
                             },
                         )])),
                     })
