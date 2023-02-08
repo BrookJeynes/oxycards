@@ -10,13 +10,10 @@ use tui::{
 use crate::{
     models::card::Card,
     models::card_types::{
-        fill_in_the_blanks::FillInTheBlanks,
-        flashcard::FlashCard,
-        multiple_answer:: MultipleAnswer,
-        multiple_choice::MultipleChoice,
-        order::Order,
+        fill_in_the_blanks::FillInTheBlanks, flashcard::FlashCard, multiple_answer::MultipleAnswer,
+        multiple_choice::MultipleChoice, order::Order,
     },
-    AppState
+    AppState, UserAnswer,
 };
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
@@ -115,27 +112,22 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                             if choice.selected {
                                 create_styled_span(
                                     choice.content.as_ref(),
-                                    if let Some(value) = card.correct_answer {
-                                        if value {
-                                            Color::Green
-                                        } else {
-                                            Color::Red
-                                        }
-                                    } else {
-                                        Color::Blue
+                                    match card.user_answer {
+                                        UserAnswer::Undecided => Color::Blue,
+                                        UserAnswer::Correct => Color::Green,
+                                        UserAnswer::Incorrect => Color::Red,
                                     },
                                 )
                             } else {
                                 create_styled_span(
                                     choice.content.as_ref(),
-                                    if let Some(value) = card.correct_answer {
-                                        if card.answers[0] == choice.content && !value {
+                                    match card.user_answer {
+                                        UserAnswer::Incorrect
+                                            if card.answers[0] == choice.content =>
+                                        {
                                             Color::Green
-                                        } else {
-                                            Color::White
                                         }
-                                    } else {
-                                        Color::White
+                                        _ => Color::White,
                                     },
                                 )
                             }
@@ -147,7 +139,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .block(create_block("Choices"))
                     .highlight_symbol("> ");
 
-                let controls = Paragraph::new(MultipleChoice::instructions()).alignment(Alignment::Left);
+                let controls =
+                    Paragraph::new(MultipleChoice::instructions()).alignment(Alignment::Left);
 
                 f.render_stateful_widget(choices_list, card_layout[1], &mut card.choices.state);
                 f.render_widget(controls, chunks[2]);
@@ -208,14 +201,10 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                             } else {
                                 Spans::from(vec![create_styled_span(
                                     format!("{}. {}", i + 1, choice.content).as_ref(),
-                                    if let Some(value) = card.correct_answer {
-                                        if value {
-                                            Color::Green
-                                        } else {
-                                            Color::Red
-                                        }
-                                    } else {
-                                        Color::White
+                                    match card.user_answer {
+                                        UserAnswer::Undecided => Color::White,
+                                        UserAnswer::Correct => Color::Green,
+                                        UserAnswer::Incorrect => Color::Red,
                                     },
                                 )])
                             }

@@ -1,5 +1,7 @@
 use core::fmt;
 
+use crate::UserAnswer;
+
 use super::card_types::{
     fill_in_the_blanks::FillInTheBlanks, flashcard::FlashCard, multiple_answer::MultipleAnswer,
     multiple_choice::MultipleChoice, order::Order,
@@ -14,14 +16,22 @@ pub enum Card {
 }
 
 impl Card {
-    // maybe a better way to do this?
-    pub fn validate_answer(&mut self) -> Option<bool> {
+    pub fn validate_answer(&mut self) -> UserAnswer {
         match self {
-            Self::FlashCard(card) => card.validate_answer(),
+            // Self::FlashCard(card) => card.validate_answer(),
             Self::MultipleChoice(card) => card.validate_answer(),
-            Self::MultipleAnswer(card) => card.validate_answer(),
-            Self::FillInTheBlanks(card) => card.validate_answer(),
+            // Self::MultipleAnswer(card) => card.validate_answer(),
+            // Self::FillInTheBlanks(card) => card.validate_answer(),
             Self::Order(card) => card.validate_answer(),
+            _ => UserAnswer::Undecided
+        }
+    }
+
+    pub fn check_answered(&mut self) -> bool {
+        match self {
+            Self::MultipleChoice(card) => card.check_answered(),
+            Self::Order(card) => card.check_answered(),
+            _ => false
         }
     }
 }
