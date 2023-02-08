@@ -70,6 +70,10 @@ impl MultipleChoice {
 
         self.correct_answer
     }
+
+    pub fn instructions() -> String {
+        return String::from("SPACE: Select choice, ENTER: Validate answer")
+    }
 }
 
 impl fmt::Display for MultipleChoice {

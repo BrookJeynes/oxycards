@@ -7,7 +7,17 @@ use tui::{
     Frame,
 };
 
-use crate::{models::card::Card, AppState};
+use crate::{
+    models::card::Card,
+    models::card_types::{
+        fill_in_the_blanks::FillInTheBlanks,
+        flashcard::FlashCard,
+        multiple_answer:: MultipleAnswer,
+        multiple_choice::MultipleChoice,
+        order::Order,
+    },
+    AppState
+};
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     let mut card_question = String::new();
@@ -89,7 +99,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                 .wrap(Wrap { trim: false })
                 .alignment(Alignment::Center);
 
-                let controls = Paragraph::new("SPACE: Show cards back, ENTER: Validate answer").alignment(Alignment::Left);
+                let controls = Paragraph::new(FlashCard::instructions()).alignment(Alignment::Left);
 
                 if card.show_validation_popup {
                     let area = centered_rect(60, 20, size);
@@ -106,7 +116,6 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
             }
             Card::MultipleChoice(card) => {
                 card_question = card.question.clone();
-
                 let choices: Vec<ListItem> = card
                     .choices
                     .items
@@ -148,8 +157,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .block(create_block("Choices"))
                     .highlight_symbol("> ");
 
-                let controls = Paragraph::new("SPACE: Select choice, ENTER: Validate answer")
-                    .alignment(Alignment::Left);
+                let controls = Paragraph::new(MultipleChoice::instructions()).alignment(Alignment::Left);
 
                 f.render_stateful_widget(choices_list, card_layout[1], &mut card.choices.state);
                 f.render_widget(controls, chunks[2]);
@@ -174,8 +182,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .block(create_block("Choices"))
                     .highlight_symbol("> ");
 
-                let controls =
-                    Paragraph::new("SPACE: Select/unselect choice").alignment(Alignment::Left);
+                let controls = Paragraph::new(Order::instructions()).alignment(Alignment::Left);
 
                 f.render_stateful_widget(choices_list, card_layout[1], &mut card.choices.state);
                 f.render_widget(controls, chunks[2]);
@@ -230,8 +237,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .block(create_block("Choices"))
                     .highlight_symbol("> ");
 
-                let controls =
-                    Paragraph::new("SPACE: Select/unselect choice").alignment(Alignment::Left);
+                let controls = Paragraph::new(Order::instructions()).alignment(Alignment::Left);
 
                 f.render_stateful_widget(choices_list, card_layout[1], &mut card.shuffled.state);
                 f.render_widget(controls, chunks[2]);

@@ -63,6 +63,10 @@ impl Order {
         }
     }
 
+    pub fn instructions() -> String {
+        return String::from("SPACE: Select first item, press SPACE again on another item to swap")
+    }
+
     pub fn validate_answer(&mut self) -> Option<bool> {
         let choices = self
             .shuffled
