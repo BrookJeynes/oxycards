@@ -18,9 +18,9 @@ pub enum Card {
 impl Card {
     pub fn validate_answer(&mut self) -> UserAnswer {
         match self {
-            // Self::FlashCard(card) => card.validate_answer(),
+            Self::FlashCard(card) => card.validate_answer(),
             Self::MultipleChoice(card) => card.validate_answer(),
-            // Self::MultipleAnswer(card) => card.validate_answer(),
+            Self::MultipleAnswer(card) => card.validate_answer(),
             // Self::FillInTheBlanks(card) => card.validate_answer(),
             Self::Order(card) => card.validate_answer(),
             _ => UserAnswer::Undecided
@@ -31,6 +31,8 @@ impl Card {
         match self {
             Self::MultipleChoice(card) => card.check_answered(),
             Self::Order(card) => card.check_answered(),
+            Self::MultipleAnswer(card) => card.check_answered(),
+            Self::FlashCard(card) => card.check_answered(),
             _ => false
         }
     }

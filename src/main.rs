@@ -17,6 +17,7 @@ use models::card_types::multiple_answer::MultipleAnswer;
 use models::card_types::multiple_choice::MultipleChoice;
 use models::card_types::order::Order;
 use models::stateful_list::StatefulList;
+use models::user_answer::UserAnswer;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 use ui::ui;
@@ -24,13 +25,6 @@ use ui::ui;
 #[derive(Debug)]
 enum ParsingError {
     NoCardType,
-}
-
-#[derive(PartialEq, Eq, Copy, Clone)]
-pub enum UserAnswer {
-    Incorrect,
-    Correct,
-    Undecided,
 }
 
 pub struct AppState {
@@ -139,7 +133,7 @@ fn run_app<B: Backend>(
                         match val {
                             Card::FlashCard(card) => card.show_back(),
                             Card::MultipleAnswer(card) => {
-                                if let None = card.correct_answer {
+                                if let UserAnswer::Undecided = card.user_answer {
                                     if let Some(index) = card.choices.selected() {
                                         card.choices.items[index].select()
                                     }
@@ -206,8 +200,10 @@ fn run_app<B: Backend>(
                     if let Some(val) = app_state.cards.selected_value() {
                         match val {
                             Card::FlashCard(card) => {
-                                if card.show_validation_popup && !card.answered {
-                                    card.answered = true;
+                                if card.show_validation_popup
+                                    && card.user_answer == UserAnswer::Undecided
+                                {
+                                    card.user_answer = UserAnswer::Correct;
                                     app_state.correct_answers += 1
                                 }
                             }
@@ -220,8 +216,10 @@ fn run_app<B: Backend>(
                     if let Some(val) = app_state.cards.selected_value() {
                         match val {
                             Card::FlashCard(card) => {
-                                if card.show_validation_popup && !card.answered {
-                                    card.answered = true;
+                                if card.show_validation_popup
+                                    && card.user_answer == UserAnswer::Undecided
+                                {
+                                    card.user_answer = UserAnswer::Incorrect;
                                     app_state.incorrect_answers += 1
                                 }
                             }
