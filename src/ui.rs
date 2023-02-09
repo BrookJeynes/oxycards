@@ -7,14 +7,12 @@ use tui::{
     Frame,
 };
 
-use crate::{
-    models::card_types::{flashcard::FlashCard, multiple_choice::MultipleChoice, order::Order},
-    models::{card::Card, user_answer::UserAnswer},
-    AppState,
-};
+use crate::{models::{card::Card, user_answer::UserAnswer}, AppState};
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     let mut card_question = String::new();
+
+    let default_instructions = "q: Quit application";
 
     let size = f.size();
 
@@ -93,8 +91,6 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                 .wrap(Wrap { trim: false })
                 .alignment(Alignment::Center);
 
-                let controls = Paragraph::new(FlashCard::instructions()).alignment(Alignment::Left);
-
                 if card.show_validation_popup {
                     let area = centered_rect(60, 20, size);
                     let paragraph = Paragraph::new("Did you get this card correct? y/n")
@@ -106,7 +102,6 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                 }
 
                 f.render_widget(answer, card_layout[1]);
-                f.render_widget(controls, chunks[2]);
             }
             Card::MultipleChoice(card) => {
                 card_question = card.question.clone();
@@ -140,11 +135,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .block(create_block("Choices"))
                     .highlight_symbol("> ");
 
-                let controls =
-                    Paragraph::new(MultipleChoice::instructions()).alignment(Alignment::Left);
-
                 f.render_stateful_widget(choices_list, card_layout[1], &mut card.choices.state);
-                f.render_widget(controls, chunks[2]);
             }
             Card::MultipleAnswer(card) => {
                 card_question = card.question.clone();
@@ -178,10 +169,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .block(create_block("Choices"))
                     .highlight_symbol("> ");
 
-                let controls = Paragraph::new(Order::instructions()).alignment(Alignment::Left);
-
                 f.render_stateful_widget(choices_list, card_layout[1], &mut card.choices.state);
-                f.render_widget(controls, chunks[2]);
             }
             Card::FillInTheBlanks(card) => {
                 card_question = card.question.clone();
@@ -221,10 +209,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
                     .block(create_block("Choices"))
                     .highlight_symbol("> ");
 
-                let controls = Paragraph::new(Order::instructions()).alignment(Alignment::Left);
-
                 f.render_stateful_widget(choices_list, card_layout[1], &mut card.shuffled.state);
-                f.render_widget(controls, chunks[2]);
             }
         }
     };
@@ -237,6 +222,15 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
             .alignment(Alignment::Center),
         card_layout[0],
     );
+
+    let instructions = match app_state.cards.selected_value() {
+      Some(card) => card.instructions(),
+      None => String::new()
+    };
+
+    // Render instructions from our card instance
+    f.render_widget(Paragraph::new(format!("{}\n{}", instructions, default_instructions)).alignment(Alignment::Left), chunks[2]);
+
 
     // Render card footer
     f.render_widget(incorrect, inner_card_layout[1]);

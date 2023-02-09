@@ -65,7 +65,7 @@ impl Order {
         }
     }
 
-    pub fn instructions() -> String {
+    pub fn instructions(&self) -> String {
         return String::from("SPACE: Select first item, press SPACE again on another item to swap");
     }
 

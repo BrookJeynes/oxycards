@@ -47,9 +47,9 @@ impl FillInTheBlanks {
         self.blank_index = self.blank_index % self.answers.len();
     }
 
-    pub fn instructions() -> String {
+    pub fn instructions(&self) -> String {
         // TODO add instructions
-        return String::from("q: Quit application")
+        return String::from("")
     }
 
     pub fn validate_answer(&mut self) -> Option<bool> {
