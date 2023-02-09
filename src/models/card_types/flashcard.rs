@@ -35,7 +35,7 @@ impl FlashCard {
         self.flipped = !self.flipped;
     }
 
-    pub fn instructions() -> String {
+    pub fn instructions(&self) -> String {
         return String::from("SPACE: Show cards back")
     }
 

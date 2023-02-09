@@ -43,7 +43,7 @@ impl MultipleAnswer {
             .collect()
     }
 
-    pub fn instructions() -> String {
+    pub fn instructions(&self) -> String {
         return String::from("SPACE: Select/unselect choice");
     }
 

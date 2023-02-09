@@ -36,6 +36,16 @@ impl Card {
             _ => false
         }
     }
+
+    pub fn instructions(&self) -> String {
+        match self {
+            Self::MultipleChoice(card) => card.instructions(),
+            Self::Order(card) => card.instructions(),
+            Self::MultipleAnswer(card) => card.instructions(),
+            Self::FlashCard(card) => card.instructions(),
+            Self::FillInTheBlanks(card) => card.instructions(),
+        }
+    }
 }
 
 impl fmt::Display for Card {

@@ -73,7 +73,7 @@ impl MultipleChoice {
         self.user_answer
     }
 
-    pub fn instructions() -> String {
+    pub fn instructions(&self) -> String {
         return String::from("SPACE: Select choice, ENTER: Validate answer");
     }
 
