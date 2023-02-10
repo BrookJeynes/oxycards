@@ -7,7 +7,10 @@ use tui::{
     Frame,
 };
 
-use crate::{models::{card::Card, user_answer::UserAnswer}, AppState};
+use crate::{
+    models::{card::Card, user_answer::UserAnswer},
+    AppState,
+};
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     let mut card_question = String::new();
@@ -55,7 +58,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
 
     // Create card footer content
     let incorrect = Paragraph::new(create_styled_span(
-        app_state.incorrect_answers.to_string().as_ref(),
+        app_state.score.incorrect.to_string().as_ref(),
         Color::Red,
     ))
     .alignment(Alignment::Left);
@@ -72,7 +75,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     .alignment(Alignment::Center);
 
     let correct = Paragraph::new(Span::styled(
-        app_state.correct_answers.to_string(),
+        app_state.score.correct.to_string(),
         Style::default().fg(Color::Green),
     ))
     .alignment(Alignment::Right);
@@ -224,13 +227,16 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     );
 
     let instructions = match app_state.cards.selected_value() {
-      Some(card) => card.instructions(),
-      None => String::new()
+        Some(card) => card.instructions(),
+        None => String::new(),
     };
 
     // Render instructions from our card instance
-    f.render_widget(Paragraph::new(format!("{}\n{}", instructions, default_instructions)).alignment(Alignment::Left), chunks[2]);
-
+    f.render_widget(
+        Paragraph::new(format!("{}\n{}", instructions, default_instructions))
+            .alignment(Alignment::Left),
+        chunks[2],
+    );
 
     // Render card footer
     f.render_widget(incorrect, inner_card_layout[1]);
