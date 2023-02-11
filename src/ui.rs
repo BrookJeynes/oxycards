@@ -7,11 +7,9 @@ use tui::{
     Frame,
 };
 
-use crate::models::card::BaseCard;
-
 use crate::{models::{card::Card, user_answer::UserAnswer}, AppState};
 
-pub fn ui<B: Backend, T: BaseCard>(f: &mut Frame<B>, app_state: &mut AppState) {
+pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     let mut card_question = String::new();
 
     let default_instructions = "q: Quit application";
@@ -226,7 +224,7 @@ pub fn ui<B: Backend, T: BaseCard>(f: &mut Frame<B>, app_state: &mut AppState) {
     );
 
     let instructions = match app_state.cards.selected_value() {
-      Some(card) => card.instructions::<T>(),
+      Some(card) => card.instructions(),
       None => String::new()
     };
 

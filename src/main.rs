@@ -1,7 +1,7 @@
 pub mod models;
 pub mod ui;
 
-use std::io::{stdout, Stdout};
+use std::io::stdout;
 use std::path::Path;
 use std::{error::Error, fs, io};
 
@@ -10,7 +10,7 @@ use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
-use models::card::{Card, BaseCard};
+use models::card::Card;
 use models::card_types::fill_in_the_blanks::FillInTheBlanks;
 use models::card_types::flashcard::FlashCard;
 use models::card_types::multiple_answer::MultipleAnswer;
@@ -98,7 +98,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let app_state = AppState::new(cards);
-    let res = run_app::<CrosstermBackend<Stdout>, dyn BaseCard>(&mut terminal, app_state);
+    let res = run_app(&mut terminal, app_state);
 
     disable_raw_mode()?;
     execute!(
@@ -115,12 +115,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_app<B: Backend, T: BaseCard>(
+fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     mut app_state: AppState,
 ) -> Result<(), Box<dyn Error>> {
     loop {
-        terminal.draw(|f| ui::<B, T>(f, &mut app_state))?;
+        terminal.draw(|f| ui(f, &mut app_state))?;
 
         if let Event::Key(key) = event::read()? {
             match key.code {

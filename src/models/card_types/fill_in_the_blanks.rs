@@ -3,8 +3,6 @@ use regex::Regex;
 
 use crate::extract_card_title;
 
-use crate::models::card::BaseCard;
-
 use crate::UserAnswer;
 
 #[derive(Debug)]
@@ -18,24 +16,23 @@ pub struct FillInTheBlanks {
     pub content: String,
     pub answers: Vec<Answer>,
     pub blank_index: usize,
-}
-
-impl BaseCard for FillInTheBlanks {
-    fn instructions(&self) -> String {
-        // TODO add instructions
-        return String::from("")
-    }
-
-    fn validate_answer(&mut self) -> UserAnswer {
-        UserAnswer::Undecided
-    }
-
-    fn check_answered(&self) -> bool {
-        false
-    }
+    pub user_answer: UserAnswer
 }
 
 impl FillInTheBlanks {
+    pub fn instructions(&self) -> String {
+        // TODO add instructions
+        return String::from("");
+    }
+
+    pub fn validate_answer(&mut self) -> UserAnswer {
+        UserAnswer::Undecided
+    }
+
+    pub fn check_answered(&self) -> bool {
+        false
+    }
+
     pub fn parse_raw(content: String) -> Self {
         let (question, content) = extract_card_title(&content);
         let re = Regex::new(r"_(.*?)_").expect("Error with regex string.");
@@ -58,6 +55,7 @@ impl FillInTheBlanks {
                 })
                 .collect(),
             blank_index: 0,
+            user_answer: UserAnswer::Undecided
         }
     }
 

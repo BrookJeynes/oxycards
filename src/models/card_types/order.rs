@@ -2,8 +2,6 @@ use core::fmt;
 
 use rand::seq::SliceRandom;
 
-use crate::models::card::BaseCard;
-
 use crate::{
     extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
@@ -18,12 +16,12 @@ pub struct Order {
     pub user_answer: UserAnswer,
 }
 
-impl BaseCard for Order {
-    fn instructions(&self) -> String {
+impl Order {
+    pub fn instructions(&self) -> String {
         return String::from("SPACE: Select first item, press SPACE again on another item to swap");
     }
 
-    fn validate_answer(&mut self) -> UserAnswer {
+    pub fn validate_answer(&mut self) -> UserAnswer {
         let choices = self
             .shuffled
             .items
@@ -40,12 +38,6 @@ impl BaseCard for Order {
         self.user_answer
     }
 
-    fn check_answered(&self) -> bool {
-        self.user_answer != UserAnswer::Undecided
-    }
-}
-
-impl Order {
     pub fn parse_raw(content: String) -> Self {
         let (question, content) = extract_card_title(&content);
         let mut rng = rand::thread_rng();
@@ -93,7 +85,6 @@ impl Order {
             choice.unselect();
         }
     }
-
 }
 
 impl fmt::Display for Order {

@@ -1,7 +1,5 @@
 use core::fmt;
 
-use crate::models::card::BaseCard;
-
 use crate::{
     extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
@@ -16,9 +14,9 @@ pub struct MultipleChoice {
     pub user_answer: UserAnswer,
 }
 
-impl BaseCard for MultipleChoice {
+impl MultipleChoice {
     /// Validate the users current answer
-    fn validate_answer(&mut self) -> UserAnswer {
+    pub fn validate_answer(&mut self) -> UserAnswer {
         let choices = self
             .choices
             .items
@@ -38,16 +36,10 @@ impl BaseCard for MultipleChoice {
         self.user_answer
     }
 
-    fn instructions(&self) -> String {
+    pub fn instructions(&self) -> String {
         return String::from("SPACE: Select choice, ENTER: Validate answer");
     }
 
-    fn check_answered(&self) -> bool {
-        self.user_answer != UserAnswer::Undecided
-    }
-}
-
-impl MultipleChoice {
     pub fn parse_raw(content: String) -> Self {
         let (question, content) = extract_card_title(&content);
 
@@ -84,7 +76,6 @@ impl MultipleChoice {
             choice.unselect();
         }
     }
-
 }
 
 impl fmt::Display for MultipleChoice {

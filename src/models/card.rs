@@ -15,53 +15,42 @@ pub enum Card {
     Order(Order),
 }
 
-pub trait BaseCard {
-    fn instructions(&self) -> String;
+macro_rules! impl_various {
+    ($($var:ident),*) => {
+        impl Card {
+            pub fn validate_answer(&mut self) -> UserAnswer {
+                match self {
+                    $(Card::$var(variant) => variant.validate_answer(),)*
+                }
+            }
 
-    fn validate_answer(&mut self) -> UserAnswer;
+            pub fn check_answered(&mut self) -> bool {
+                match self {
+                    $(Card::$var(variant) => variant.user_answer != UserAnswer::Undecided,)*
+                }
+            }
 
-    fn check_answered(&self) -> bool;
-}
-
-
-impl Card {
-    pub fn validate_answer(&mut self) -> UserAnswer {
-        match self {
-            Self::FlashCard(card) => card.validate_answer(),
-            Self::MultipleChoice(card) => card.validate_answer(),
-            Self::MultipleAnswer(card) => card.validate_answer(),
-            // Self::FillInTheBlanks(card) => card.validate_answer(),
-            Self::Order(card) => card.validate_answer(),
-            _ => UserAnswer::Undecided
+            pub fn instructions(&self) -> String {
+                match self {
+                    $(Card::$var(variant) => variant.instructions(),)*
+                }
+            }
         }
-    }
 
-    pub fn check_answered(&mut self) -> bool {
-        match self {
-            Self::MultipleChoice(card) => card.check_answered(),
-            Self::Order(card) => card.check_answered(),
-            Self::MultipleAnswer(card) => card.check_answered(),
-            Self::FlashCard(card) => card.check_answered(),
-            _ => false
-        }
-    }
-
-// fn test_traits<T>(card: T) where T: BaseCard {
-//     card.check_answered
-// }
-    pub fn instructions<T>(&self) -> String where T: BaseCard {
-        self.instructions::<T>()
-    }
-}
-
-impl fmt::Display for Card {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::FlashCard(card) => write!(f, "{card}"),
-            Self::MultipleChoice(card) => write!(f, "{card}"),
-            Self::MultipleAnswer(card) => write!(f, "{card}"),
-            Self::FillInTheBlanks(card) => write!(f, "{card}"),
-            Self::Order(card) => write!(f, "{card}"),
+        impl fmt::Display for Card {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                match self {
+                    $(Card::$var(variant) => write!(f, "{variant}"),)*
+                }
+            }
         }
     }
 }
+
+impl_various!(
+    FlashCard,
+    MultipleAnswer,
+    MultipleChoice,
+    FillInTheBlanks,
+    Order
+);
