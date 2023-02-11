@@ -1,5 +1,7 @@
 use core::fmt;
 
+use crate::models::card::BaseCard;
+
 use crate::{
     extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
@@ -12,6 +14,37 @@ pub struct MultipleChoice {
     pub answers: Vec<String>,
 
     pub user_answer: UserAnswer,
+}
+
+impl BaseCard for MultipleChoice {
+    /// Validate the users current answer
+    fn validate_answer(&mut self) -> UserAnswer {
+        let choices = self
+            .choices
+            .items
+            .iter()
+            .filter(|item| item.selected)
+            .map(|item| item.content.to_string())
+            .collect::<Vec<String>>();
+
+        self.user_answer = if choices.is_empty() {
+            UserAnswer::Undecided
+        } else if choices == self.answers {
+            UserAnswer::Correct
+        } else {
+            UserAnswer::Incorrect
+        };
+
+        self.user_answer
+    }
+
+    fn instructions(&self) -> String {
+        return String::from("SPACE: Select choice, ENTER: Validate answer");
+    }
+
+    fn check_answered(&self) -> bool {
+        self.user_answer != UserAnswer::Undecided
+    }
 }
 
 impl MultipleChoice {
@@ -52,34 +85,6 @@ impl MultipleChoice {
         }
     }
 
-    /// Validate the users current answer
-    pub fn validate_answer(&mut self) -> UserAnswer {
-        let choices = self
-            .choices
-            .items
-            .iter()
-            .filter(|item| item.selected)
-            .map(|item| item.content.to_string())
-            .collect::<Vec<String>>();
-
-        self.user_answer = if choices.is_empty() {
-            UserAnswer::Undecided
-        } else if choices == self.answers {
-            UserAnswer::Correct
-        } else {
-            UserAnswer::Incorrect
-        };
-
-        self.user_answer
-    }
-
-    pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select choice, ENTER: Validate answer");
-    }
-
-    pub fn check_answered(&self) -> bool {
-        self.user_answer != UserAnswer::Undecided
-    }
 }
 
 impl fmt::Display for MultipleChoice {

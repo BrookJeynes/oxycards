@@ -3,6 +3,10 @@ use regex::Regex;
 
 use crate::extract_card_title;
 
+use crate::models::card::BaseCard;
+
+use crate::UserAnswer;
+
 #[derive(Debug)]
 pub struct Answer {
     pub answers: Vec<String>,
@@ -14,6 +18,21 @@ pub struct FillInTheBlanks {
     pub content: String,
     pub answers: Vec<Answer>,
     pub blank_index: usize,
+}
+
+impl BaseCard for FillInTheBlanks {
+    fn instructions(&self) -> String {
+        // TODO add instructions
+        return String::from("")
+    }
+
+    fn validate_answer(&mut self) -> UserAnswer {
+        UserAnswer::Undecided
+    }
+
+    fn check_answered(&self) -> bool {
+        false
+    }
 }
 
 impl FillInTheBlanks {
@@ -45,15 +64,6 @@ impl FillInTheBlanks {
     /// Move to the next fill-in-the-blank spot
     fn next(&mut self) {
         self.blank_index = self.blank_index % self.answers.len();
-    }
-
-    pub fn instructions(&self) -> String {
-        // TODO add instructions
-        return String::from("")
-    }
-
-    pub fn validate_answer(&mut self) -> Option<bool> {
-        None
     }
 }
 

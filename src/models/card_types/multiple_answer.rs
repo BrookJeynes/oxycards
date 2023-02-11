@@ -1,5 +1,7 @@
 use core::fmt;
 
+use crate::models::card::BaseCard;
+
 use crate::{
     extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
@@ -11,6 +13,36 @@ pub struct MultipleAnswer {
     pub choices: StatefulList<Choice>,
     pub answers: Vec<String>,
     pub user_answer: UserAnswer,
+}
+
+impl BaseCard for MultipleAnswer {
+    fn instructions(&self) -> String {
+        return String::from("SPACE: Select/unselect choice");
+    }
+
+    fn validate_answer(&mut self) -> UserAnswer {
+        let choices = self
+            .choices
+            .items
+            .iter()
+            .filter(|item| item.selected)
+            .map(|item| item.content.to_string())
+            .collect::<Vec<String>>();
+
+        self.user_answer = if choices.is_empty() {
+            UserAnswer::Undecided
+        } else if choices == self.answers {
+            UserAnswer::Correct
+        } else {
+            UserAnswer::Incorrect
+        };
+
+        self.user_answer
+    }
+
+    fn check_answered(&self) -> bool {
+        self.user_answer != UserAnswer::Undecided
+    }
 }
 
 impl MultipleAnswer {
@@ -41,34 +73,6 @@ impl MultipleAnswer {
             .filter(|item| prefix.contains(&item.chars().nth(1).unwrap()))
             .map(|item| item[3..].trim().to_string())
             .collect()
-    }
-
-    pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select/unselect choice");
-    }
-
-    pub fn validate_answer(&mut self) -> UserAnswer {
-        let choices = self
-            .choices
-            .items
-            .iter()
-            .filter(|item| item.selected)
-            .map(|item| item.content.to_string())
-            .collect::<Vec<String>>();
-
-        self.user_answer = if choices.is_empty() {
-            UserAnswer::Undecided
-        } else if choices == self.answers {
-            UserAnswer::Correct
-        } else {
-            UserAnswer::Incorrect
-        };
-
-        self.user_answer
-    }
-
-    pub fn check_answered(&self) -> bool {
-        self.user_answer != UserAnswer::Undecided
     }
 }
 

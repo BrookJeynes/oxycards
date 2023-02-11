@@ -15,6 +15,15 @@ pub enum Card {
     Order(Order),
 }
 
+pub trait BaseCard {
+    fn instructions(&self) -> String;
+
+    fn validate_answer(&mut self) -> UserAnswer;
+
+    fn check_answered(&self) -> bool;
+}
+
+
 impl Card {
     pub fn validate_answer(&mut self) -> UserAnswer {
         match self {
@@ -37,14 +46,11 @@ impl Card {
         }
     }
 
-    pub fn instructions(&self) -> String {
-        match self {
-            Self::MultipleChoice(card) => card.instructions(),
-            Self::Order(card) => card.instructions(),
-            Self::MultipleAnswer(card) => card.instructions(),
-            Self::FlashCard(card) => card.instructions(),
-            Self::FillInTheBlanks(card) => card.instructions(),
-        }
+// fn test_traits<T>(card: T) where T: BaseCard {
+//     card.check_answered
+// }
+    pub fn instructions<T>(&self) -> String where T: BaseCard {
+        self.instructions::<T>()
     }
 }
 

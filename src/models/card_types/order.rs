@@ -2,6 +2,8 @@ use core::fmt;
 
 use rand::seq::SliceRandom;
 
+use crate::models::card::BaseCard;
+
 use crate::{
     extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
@@ -14,6 +16,33 @@ pub struct Order {
     pub answer: Vec<String>,
 
     pub user_answer: UserAnswer,
+}
+
+impl BaseCard for Order {
+    fn instructions(&self) -> String {
+        return String::from("SPACE: Select first item, press SPACE again on another item to swap");
+    }
+
+    fn validate_answer(&mut self) -> UserAnswer {
+        let choices = self
+            .shuffled
+            .items
+            .iter()
+            .map(|item| item.content.to_string())
+            .collect::<Vec<String>>();
+
+        self.user_answer = if choices == self.answer {
+            UserAnswer::Correct
+        } else {
+            UserAnswer::Incorrect
+        };
+
+        self.user_answer
+    }
+
+    fn check_answered(&self) -> bool {
+        self.user_answer != UserAnswer::Undecided
+    }
 }
 
 impl Order {
@@ -65,30 +94,6 @@ impl Order {
         }
     }
 
-    pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select first item, press SPACE again on another item to swap");
-    }
-
-    pub fn validate_answer(&mut self) -> UserAnswer {
-        let choices = self
-            .shuffled
-            .items
-            .iter()
-            .map(|item| item.content.to_string())
-            .collect::<Vec<String>>();
-
-        self.user_answer = if choices == self.answer {
-            UserAnswer::Correct
-        } else {
-            UserAnswer::Incorrect
-        };
-
-        self.user_answer
-    }
-
-    pub fn check_answered(&self) -> bool {
-        self.user_answer != UserAnswer::Undecided
-    }
 }
 
 impl fmt::Display for Order {
