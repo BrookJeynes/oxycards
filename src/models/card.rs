@@ -20,19 +20,19 @@ macro_rules! impl_various {
         impl Card {
             pub fn validate_answer(&mut self) -> UserAnswer {
                 match self {
-                    $(Card::$var(variant) => variant.validate_answer(),)*
+                    $(Card::$var(card) => card.validate_answer(),)*
                 }
             }
 
             pub fn check_answered(&mut self) -> bool {
                 match self {
-                    $(Card::$var(variant) => variant.user_answer != UserAnswer::Undecided,)*
+                    $(Card::$var(card) => card.user_answer != UserAnswer::Undecided,)*
                 }
             }
 
             pub fn instructions(&self) -> String {
                 match self {
-                    $(Card::$var(variant) => variant.instructions(),)*
+                    $(Card::$var(card) => card.instructions(),)*
                 }
             }
         }
@@ -40,7 +40,7 @@ macro_rules! impl_various {
         impl fmt::Display for Card {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 match self {
-                    $(Card::$var(variant) => write!(f, "{variant}"),)*
+                    $(Card::$var(card) => write!(f, "{card}"),)*
                 }
             }
         }
