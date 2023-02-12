@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{extract_card_title, UserAnswer};
+use crate::{Card, UserAnswer};
 
 pub struct FlashCard {
     pub question: String,
@@ -23,7 +23,7 @@ impl FlashCard {
     }
 
     pub fn parse_raw(content: String) -> Self {
-        let (question, content) = extract_card_title(&content);
+        let (question, content) = Card::extract_card_title(&content);
 
         Self {
             question,

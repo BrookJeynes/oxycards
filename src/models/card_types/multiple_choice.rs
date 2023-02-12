@@ -1,9 +1,8 @@
 use core::fmt;
 
 use crate::{
-    extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
-    UserAnswer,
+    Card, UserAnswer,
 };
 
 pub struct MultipleChoice {
@@ -41,7 +40,7 @@ impl MultipleChoice {
     }
 
     pub fn parse_raw(content: String) -> Self {
-        let (question, content) = extract_card_title(&content);
+        let (question, content) = Card::extract_card_title(&content);
 
         Self {
             question,

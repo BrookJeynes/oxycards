@@ -3,9 +3,8 @@ use core::fmt;
 use rand::seq::SliceRandom;
 
 use crate::{
-    extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
-    UserAnswer,
+    Card, UserAnswer,
 };
 
 pub struct Order {
@@ -39,7 +38,7 @@ impl Order {
     }
 
     pub fn parse_raw(content: String) -> Self {
-        let (question, content) = extract_card_title(&content);
+        let (question, content) = Card::extract_card_title(&content);
         let mut rng = rand::thread_rng();
 
         let mut shuffled: Vec<Choice> = content

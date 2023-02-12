@@ -1,9 +1,7 @@
 use core::fmt;
 use regex::Regex;
 
-use crate::extract_card_title;
-
-use crate::UserAnswer;
+use crate::{UserAnswer, models::card::Card};
 
 #[derive(Debug)]
 pub struct Answer {
@@ -34,7 +32,7 @@ impl FillInTheBlanks {
     }
 
     pub fn parse_raw(content: String) -> Self {
-        let (question, content) = extract_card_title(&content);
+        let (question, content) = Card::extract_card_title(&content);
         let re = Regex::new(r"_(.*?)_").expect("Error with regex string.");
 
         Self {
