@@ -13,7 +13,7 @@ pub struct FlashCard {
 
 impl FlashCard {
     pub fn instructions(&self) -> String {
-        return String::from("SPACE: Show cards back");
+        String::from("<SPACE>: Show cards back")
     }
 
     pub fn validate_answer(&mut self) -> UserAnswer {

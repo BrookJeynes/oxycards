@@ -11,8 +11,10 @@ use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use models::card::Card;
+use models::card_types::fill_in_the_blanks::FillInTheBlanks;
 use models::stateful_list::StatefulList;
 use models::user_answer::UserAnswer;
+use regex::Regex;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 use ui::ui;
@@ -103,7 +105,11 @@ fn run_app<B: Backend>(
 
         if let Some(val) = app_state.cards.selected_value() {
             match val {
-                Card::FillInTheBlanks(_) => app_state.input_mode = InputMode::Editing,
+                Card::FillInTheBlanks(card) => {
+                    if let UserAnswer::Undecided = card.user_answer {
+                        app_state.input_mode = InputMode::Editing
+                    }
+                }
                 _ => app_state.input_mode = InputMode::Normal,
             }
         }
@@ -241,6 +247,8 @@ fn run_app<B: Backend>(
                                     UserAnswer::Incorrect => app_state.score.add_incorrect(),
                                     UserAnswer::Undecided => {}
                                 }
+
+                                app_state.input_mode = InputMode::Normal;
                             }
                         }
                     }
@@ -248,7 +256,7 @@ fn run_app<B: Backend>(
                         if let Some(card_) = app_state.cards.selected_value() {
                             if let Card::FillInTheBlanks(card) = card_ {
                                 card.user_input[card.blank_index].push(c);
-                                edit_blank_space(card);
+                                card.update_output();
                             }
                         }
                     }
@@ -256,7 +264,7 @@ fn run_app<B: Backend>(
                         if let Some(card_) = app_state.cards.selected_value() {
                             if let Card::FillInTheBlanks(card) = card_ {
                                 card.user_input[card.blank_index].pop();
-                                edit_blank_space(card);
+                                card.update_output();
                             }
                         }
                     }
@@ -269,13 +277,4 @@ fn run_app<B: Backend>(
             }
         }
     }
-}
-
-fn edit_blank_space(card: &mut FillInTheBlanks) {
-    card.content = card.content.replacen(
-        format!("_{}_", card.current_input[card.blank_index]).as_str(),
-        format!("_{}_", card.user_input[card.blank_index]).as_str(),
-        1,
-    );
-    card.current_input[card.blank_index] = card.user_input[card.blank_index].clone();
 }

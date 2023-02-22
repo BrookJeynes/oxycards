@@ -36,7 +36,7 @@ impl MultipleChoice {
     }
 
     pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select choice, ENTER: Validate answer");
+        String::from("<SPACE>: Select/unselect choice")
     }
 
     pub fn parse_raw(content: String) -> Self {

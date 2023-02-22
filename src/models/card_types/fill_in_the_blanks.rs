@@ -2,7 +2,7 @@ use core::fmt;
 use regex::Regex;
 use std::collections::HashMap;
 
-use crate::{UserAnswer, models::card::Card};
+use crate::{models::card::Card, UserAnswer};
 
 #[derive(Debug)]
 pub struct Answer {
@@ -13,23 +13,14 @@ pub struct Answer {
 pub struct FillInTheBlanks {
     pub question: String,
     pub content: String,
+    pub output: String,
     pub user_input: Vec<String>,
-    pub current_input: Vec<String>,
     pub answers: HashMap<usize, Vec<String>>,
     pub blank_index: usize,
     pub user_answer: UserAnswer,
 }
 
 impl FillInTheBlanks {
-    pub fn instructions(&self) -> String {
-        // TODO add instructions
-        return String::from("");
-    }
-
-    pub fn validate_answer(&mut self) -> UserAnswer {
-        UserAnswer::Undecided
-    }
-
     pub fn check_answered(&self) -> bool {
         false
     }
@@ -52,14 +43,13 @@ impl FillInTheBlanks {
 
         // Create an array with empty string of size answers
         let user_input: Vec<String> = answers.iter().map(|_| String::new()).collect();
-        let current_input: Vec<String> = answers.iter().map(|_| String::from("")).collect();
 
         Self {
             question,
             content: re.replace_all(content.as_ref(), "__").to_string(),
             answers,
+            output: re.replace_all(content.as_ref(), "").to_string(),
             user_input,
-            current_input,
             blank_index: 0,
             user_answer: UserAnswer::Undecided,
         }
@@ -71,8 +61,7 @@ impl FillInTheBlanks {
     }
 
     pub fn instructions(&self) -> String {
-        // TODO add instructions
-        return String::from("ESC: Quit, TAB: Next blank spot");
+        String::from("<ESC>: Quit application, <TAB>: Cycle selection, <Char>: Add character pressed to blank space")
     }
 
     pub fn validate_answer(&mut self) -> UserAnswer {
@@ -89,13 +78,31 @@ impl FillInTheBlanks {
         }
 
         for (index, item) in self.user_input.iter().enumerate() {
-            // Don't unwrap
-            if !self.answers.get(&index).unwrap().contains(item) && !item.is_empty() {
+            if !self.answers.get(&index).unwrap_or(&vec![]).contains(item) && !item.is_empty() {
                 self.user_answer = UserAnswer::Incorrect;
             }
         }
 
         self.user_answer
+    }
+
+    pub fn update_output(&mut self) {
+        let new_content = self
+            .content
+            .split("__")
+            .take(self.answers.len())
+            .enumerate()
+            .map(|(index, item)| {
+                format!(
+                    "{}{}",
+                    item,
+                    self.user_input.get(index).unwrap_or(&String::new())
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("");
+
+        self.output = new_content;
     }
 }
 
