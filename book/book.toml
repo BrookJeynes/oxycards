@@ -1,0 +1,6 @@
+[book]
+authors = ["Brook Jeynes"]
+language = "en"
+multilingual = false
+src = "src"
+title = "book"
