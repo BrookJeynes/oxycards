@@ -3,9 +3,8 @@ use core::fmt;
 use rand::seq::SliceRandom;
 
 use crate::{
-    extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
-    UserAnswer,
+    Card, UserAnswer,
 };
 
 pub struct Order {
@@ -17,8 +16,29 @@ pub struct Order {
 }
 
 impl Order {
+    pub fn instructions(&self) -> String {
+        return String::from("SPACE: Select first item, press SPACE again on another item to swap");
+    }
+
+    pub fn validate_answer(&mut self) -> UserAnswer {
+        let choices = self
+            .shuffled
+            .items
+            .iter()
+            .map(|item| item.content.to_string())
+            .collect::<Vec<String>>();
+
+        self.user_answer = if choices == self.answer {
+            UserAnswer::Correct
+        } else {
+            UserAnswer::Incorrect
+        };
+
+        self.user_answer
+    }
+
     pub fn parse_raw(content: String) -> Self {
-        let (question, content) = extract_card_title(&content);
+        let (question, content) = Card::extract_card_title(&content);
         let mut rng = rand::thread_rng();
 
         let mut shuffled: Vec<Choice> = content
@@ -63,31 +83,6 @@ impl Order {
         for choice in self.shuffled.items.iter_mut() {
             choice.unselect();
         }
-    }
-
-    pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select first item, press SPACE again on another item to swap");
-    }
-
-    pub fn validate_answer(&mut self) -> UserAnswer {
-        let choices = self
-            .shuffled
-            .items
-            .iter()
-            .map(|item| item.content.to_string())
-            .collect::<Vec<String>>();
-
-        self.user_answer = if choices == self.answer {
-            UserAnswer::Correct
-        } else {
-            UserAnswer::Incorrect
-        };
-
-        self.user_answer
-    }
-
-    pub fn check_answered(&self) -> bool {
-        self.user_answer != UserAnswer::Undecided
     }
 }
 

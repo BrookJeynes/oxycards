@@ -1,7 +1,7 @@
 use core::fmt;
 use regex::Regex;
 
-use crate::extract_card_title;
+use crate::{UserAnswer, models::card::Card};
 
 #[derive(Debug)]
 pub struct Answer {
@@ -14,11 +14,25 @@ pub struct FillInTheBlanks {
     pub content: String,
     pub answers: Vec<Answer>,
     pub blank_index: usize,
+    pub user_answer: UserAnswer
 }
 
 impl FillInTheBlanks {
+    pub fn instructions(&self) -> String {
+        // TODO add instructions
+        return String::from("");
+    }
+
+    pub fn validate_answer(&mut self) -> UserAnswer {
+        UserAnswer::Undecided
+    }
+
+    pub fn check_answered(&self) -> bool {
+        false
+    }
+
     pub fn parse_raw(content: String) -> Self {
-        let (question, content) = extract_card_title(&content);
+        let (question, content) = Card::extract_card_title(&content);
         let re = Regex::new(r"_(.*?)_").expect("Error with regex string.");
 
         Self {
@@ -39,21 +53,13 @@ impl FillInTheBlanks {
                 })
                 .collect(),
             blank_index: 0,
+            user_answer: UserAnswer::Undecided
         }
     }
 
     /// Move to the next fill-in-the-blank spot
     fn next(&mut self) {
         self.blank_index = self.blank_index % self.answers.len();
-    }
-
-    pub fn instructions(&self) -> String {
-        // TODO add instructions
-        return String::from("")
-    }
-
-    pub fn validate_answer(&mut self) -> Option<bool> {
-        None
     }
 }
 

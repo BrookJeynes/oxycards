@@ -1,7 +1,7 @@
 use core::fmt;
 
 use crate::{
-    extract_card_title,
+    Card,
     models::{choice::Choice, stateful_list::StatefulList},
     UserAnswer,
 };
@@ -14,8 +14,32 @@ pub struct MultipleAnswer {
 }
 
 impl MultipleAnswer {
+    pub fn instructions(&self) -> String {
+        return String::from("SPACE: Select/unselect choice");
+    }
+
+    pub fn validate_answer(&mut self) -> UserAnswer {
+        let choices = self
+            .choices
+            .items
+            .iter()
+            .filter(|item| item.selected)
+            .map(|item| item.content.to_string())
+            .collect::<Vec<String>>();
+
+        self.user_answer = if choices.is_empty() {
+            UserAnswer::Undecided
+        } else if choices == self.answers {
+            UserAnswer::Correct
+        } else {
+            UserAnswer::Incorrect
+        };
+
+        self.user_answer
+    }
+
     pub fn parse_raw(content: String) -> Self {
-        let (question, content) = extract_card_title(&content);
+        let (question, content) = Card::extract_card_title(&content);
 
         Self {
             question,
@@ -41,34 +65,6 @@ impl MultipleAnswer {
             .filter(|item| prefix.contains(&item.chars().nth(1).unwrap()))
             .map(|item| item[3..].trim().to_string())
             .collect()
-    }
-
-    pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select/unselect choice");
-    }
-
-    pub fn validate_answer(&mut self) -> UserAnswer {
-        let choices = self
-            .choices
-            .items
-            .iter()
-            .filter(|item| item.selected)
-            .map(|item| item.content.to_string())
-            .collect::<Vec<String>>();
-
-        self.user_answer = if choices.is_empty() {
-            UserAnswer::Undecided
-        } else if choices == self.answers {
-            UserAnswer::Correct
-        } else {
-            UserAnswer::Incorrect
-        };
-
-        self.user_answer
-    }
-
-    pub fn check_answered(&self) -> bool {
-        self.user_answer != UserAnswer::Undecided
     }
 }
 

@@ -1,9 +1,8 @@
 use core::fmt;
 
 use crate::{
-    extract_card_title,
     models::{choice::Choice, stateful_list::StatefulList},
-    UserAnswer,
+    Card, UserAnswer,
 };
 
 pub struct MultipleChoice {
@@ -15,8 +14,33 @@ pub struct MultipleChoice {
 }
 
 impl MultipleChoice {
+    /// Validate the users current answer
+    pub fn validate_answer(&mut self) -> UserAnswer {
+        let choices = self
+            .choices
+            .items
+            .iter()
+            .filter(|item| item.selected)
+            .map(|item| item.content.to_string())
+            .collect::<Vec<String>>();
+
+        self.user_answer = if choices.is_empty() {
+            UserAnswer::Undecided
+        } else if choices == self.answers {
+            UserAnswer::Correct
+        } else {
+            UserAnswer::Incorrect
+        };
+
+        self.user_answer
+    }
+
+    pub fn instructions(&self) -> String {
+        return String::from("SPACE: Select choice, ENTER: Validate answer");
+    }
+
     pub fn parse_raw(content: String) -> Self {
-        let (question, content) = extract_card_title(&content);
+        let (question, content) = Card::extract_card_title(&content);
 
         Self {
             question,
@@ -50,35 +74,6 @@ impl MultipleChoice {
         for choice in self.choices.items.iter_mut() {
             choice.unselect();
         }
-    }
-
-    /// Validate the users current answer
-    pub fn validate_answer(&mut self) -> UserAnswer {
-        let choices = self
-            .choices
-            .items
-            .iter()
-            .filter(|item| item.selected)
-            .map(|item| item.content.to_string())
-            .collect::<Vec<String>>();
-
-        self.user_answer = if choices.is_empty() {
-            UserAnswer::Undecided
-        } else if choices == self.answers {
-            UserAnswer::Correct
-        } else {
-            UserAnswer::Incorrect
-        };
-
-        self.user_answer
-    }
-
-    pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select choice, ENTER: Validate answer");
-    }
-
-    pub fn check_answered(&self) -> bool {
-        self.user_answer != UserAnswer::Undecided
     }
 }
 
