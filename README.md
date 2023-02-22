@@ -19,74 +19,22 @@ Quiz-rs is a quiz card application built within the terminal.
     - Place in the correct order
 
 
-## Run Locally
+## Links
+- [Documentation](https://brookjeynes.github.io/quiz-rs/)
+- [Installation](https://brookjeynes.github.io/quiz-rs/installation)
 
-1. Clone the project
 
-```bash
-  git clone https://github.com/BrookJeynes/quiz-rs
-```
+## Roadmap
+- [ ] Complete all basic card types
+    - [x] Multiple choice
+    - [x] Multiple answer
+    - [x] Flashcard
+    - [ ] Fill in the blanks
+    - [x] Place in the correct order
+- [ ] Read in card input file from command line
+- [ ] Release on distribution platforms for easy install
+- [ ] Website for users to share their decks
 
-2. Go to the project directory
-
-```bash
-  cd quiz-rs
-```
-
-3. Create a set of cards within `input.md` at the projects root. See the #Documentation section on card formatting
-
-4. Start the application
-
-```bash
-  cargo run
-```
-
-## Documentation
-
-Below is an example of `input.md`.
-
-```md
-flashcard
-
-# Word or question
-Explanation or definition of this word, or the answer to the question.
-
----
-
-multiple_choice
-
-# Multiple choice question - (correct answer is denoted by an *)
-* Choice 1
-- Choice 2
-- Choice 3
-- Choice 4
-
----
-
-multiple_answer
-
-# Multiple answer question - (correct answers is denoted by an *)
-[*] Option 1
-[ ] Option 2
-[ ] Option 3
-[*] Option 4
-
----
-
-fill_in_the_blanks
-
-# Fill in the gaps
-The word chook, also know as _chicken_, is a word commonly used in _AUS|Australia_.
----
-
-order
-
-# Order the numbers from largest to smallest - (options are placed in the correct ordering and are shuffed within the application)
-1. 100000
-2. 4235
-3. 23
-4. 6
-```
 
 #### Attributions
 This application was heavily inspired by [hascard](https://github.com/Yvee1/hascard).
