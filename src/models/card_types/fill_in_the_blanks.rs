@@ -2,7 +2,13 @@ use core::fmt;
 use regex::Regex;
 use std::collections::HashMap;
 
-use crate::{extract_card_title, models::user_answer::UserAnswer};
+use crate::{UserAnswer, models::card::Card};
+
+#[derive(Debug)]
+pub struct Answer {
+    pub answers: Vec<String>,
+    pub content: String,
+}
 
 pub struct FillInTheBlanks {
     pub question: String,
@@ -15,8 +21,21 @@ pub struct FillInTheBlanks {
 }
 
 impl FillInTheBlanks {
+    pub fn instructions(&self) -> String {
+        // TODO add instructions
+        return String::from("");
+    }
+
+    pub fn validate_answer(&mut self) -> UserAnswer {
+        UserAnswer::Undecided
+    }
+
+    pub fn check_answered(&self) -> bool {
+        false
+    }
+
     pub fn parse_raw(content: String) -> Self {
-        let (question, content) = extract_card_title(&content);
+        let (question, content) = Card::extract_card_title(&content);
         let re = Regex::new(r"_(.*?)_").expect("Error with regex string.");
 
         let answers = HashMap::from(
@@ -77,10 +96,6 @@ impl FillInTheBlanks {
         }
 
         self.user_answer
-    }
-
-    pub fn check_answered(&self) -> bool {
-        self.user_answer != UserAnswer::Undecided
     }
 }
 

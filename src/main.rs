@@ -11,22 +11,11 @@ use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use models::card::Card;
-use models::card_types::fill_in_the_blanks::FillInTheBlanks;
-use models::card_types::flashcard::FlashCard;
-use models::card_types::multiple_answer::MultipleAnswer;
-use models::card_types::multiple_choice::MultipleChoice;
-use models::card_types::order::Order;
 use models::stateful_list::StatefulList;
 use models::user_answer::UserAnswer;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 use ui::ui;
-
-#[derive(Debug)]
-enum ParsingError {
-    NoCardType,
-}
-
 pub enum InputMode {
     Normal,
     Editing,
@@ -72,45 +61,6 @@ impl AppState {
     }
 }
 
-fn extract_card_title(content: &String) -> (String, String) {
-    // Don't unwrap
-    let question = content.lines().nth(0).unwrap()[1..].trim().to_string();
-    let content = content.lines().skip(1).collect::<Vec<&str>>().join("\n");
-
-    (question, content)
-}
-
-fn card_parser(content: String) -> Result<Vec<Card>, ParsingError> {
-    let cards: Vec<Card> = content
-        .split("---")
-        .map(|section| {
-            let sections = section
-                .trim()
-                .split("\n\n")
-                .filter(|item| !item.is_empty())
-                .collect::<Vec<&str>>();
-
-            match sections[0].to_lowercase().as_str() {
-                "flashcard" => Card::FlashCard(FlashCard::parse_raw(sections[1].to_string())),
-                "multiple_choice" => {
-                    Card::MultipleChoice(MultipleChoice::parse_raw(sections[1].to_string()))
-                }
-                "multiple_answer" => {
-                    Card::MultipleAnswer(MultipleAnswer::parse_raw(sections[1].to_string()))
-                }
-                "fill_in_the_blanks" => {
-                    Card::FillInTheBlanks(FillInTheBlanks::parse_raw(sections[1].to_string()))
-                }
-                "order" => Card::Order(Order::parse_raw(sections[1].to_string())),
-                // Replace with ParsingError datatype
-                _ => panic!("Parsing Error"),
-            }
-        })
-        .collect();
-
-    Ok(cards)
-}
-
 fn read_from_file(path: &Path) -> Result<String, io::Error> {
     fs::read_to_string(path)
 }
@@ -118,7 +68,7 @@ fn read_from_file(path: &Path) -> Result<String, io::Error> {
 fn main() -> Result<(), Box<dyn Error>> {
     let content = read_from_file(Path::new("input.md"))?;
     // Todo: Don't unwrap()
-    let cards = card_parser(content).unwrap();
+    let cards = Card::card_parser(content).unwrap();
 
     enable_raw_mode()?;
     let mut stdout = stdout();
