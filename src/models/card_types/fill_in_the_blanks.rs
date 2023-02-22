@@ -1,20 +1,15 @@
 use core::fmt;
 use regex::Regex;
+use std::collections::HashMap;
 
 use crate::{extract_card_title, models::user_answer::UserAnswer};
-
-#[derive(Debug)]
-pub struct Answer {
-    pub answers: Vec<String>,
-    pub content: String,
-}
 
 pub struct FillInTheBlanks {
     pub question: String,
     pub content: String,
     pub user_input: Vec<String>,
     pub current_input: Vec<String>,
-    pub answers: Vec<String>,
+    pub answers: HashMap<usize, Vec<String>>,
     pub blank_index: usize,
     pub user_answer: UserAnswer,
 }
@@ -24,21 +19,17 @@ impl FillInTheBlanks {
         let (question, content) = extract_card_title(&content);
         let re = Regex::new(r"_(.*?)_").expect("Error with regex string.");
 
-        let answers: Vec<String> = re
-            .captures_iter(content.as_ref())
-            .flat_map(|c| {
-                let capture = c[1].to_string();
+        let answers = HashMap::from(
+            re.captures_iter(content.as_ref())
+                .enumerate()
+                .map(|(index, c)| {
+                    let capture: Vec<String> =
+                        c[1].split("|").map(|item| item.to_string()).collect();
 
-                let capture: Vec<&str> = capture.split("|").collect();
-
-                // Bug: For every multiple choice fill-in-the-blank, there will be an additional
-                // spot the user has to scoll.
-                capture
-                    .iter()
-                    .map(|item| item.to_string())
-                    .collect::<Vec<String>>()
-            })
-            .collect();
+                    (index, capture)
+                })
+                .collect::<HashMap<usize, Vec<String>>>(),
+        );
 
         // Create an array with empty string of size answers
         let user_input: Vec<String> = answers.iter().map(|_| String::new()).collect();
@@ -78,10 +69,9 @@ impl FillInTheBlanks {
             self.user_answer = UserAnswer::Undecided;
         }
 
-        // Bug: The user doesn't have to get the answers in the correct order, but much rather have
-        // the correct answers written down
-        for item in self.user_input.iter() {
-            if !self.answers.contains(item) && !item.is_empty() {
+        for (index, item) in self.user_input.iter().enumerate() {
+            // Don't unwrap
+            if !self.answers.get(&index).unwrap().contains(item) && !item.is_empty() {
                 self.user_answer = UserAnswer::Incorrect;
             }
         }
