@@ -1,7 +1,16 @@
 [package]
 name = "quiz-rs"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+authors = ["Brook Jeynes jeynesbrook@pm.me", "Tawny ?"]
+license = "MIT"
+description = "An interactive quiz application built for the terminal."
+documentation = "https://brookjeynes.github.io/quiz-rs/"
+readme = "README.md"
+homepage = "https://github.com/BrookJeynes/quiz-rs"
+repository = "https://github.com/BrookJeynes/quiz-rs"
+keywords = ["cli", "tui", "quiz", "study", "flashcard"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
