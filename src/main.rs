@@ -1,11 +1,14 @@
 pub mod models;
 pub mod ui;
 
-use std::io::stdout;
+use clap::Parser;
+
+use core::fmt;
+use std::ffi::OsStr;
 use std::path::Path;
 use std::{error::Error, fs, io};
 
-use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode};
+use crossterm::event::{self, Event, KeyCode};
 use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
@@ -16,6 +19,63 @@ use models::user_answer::UserAnswer;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 use ui::ui;
+
+#[derive(PartialEq)]
+enum FileType {
+    MD,
+}
+
+impl FileType {
+    fn from_str(file_extension: &str) -> Option<Self> {
+        match file_extension {
+            "md" => Some(FileType::MD),
+            _ => None,
+        }
+    }
+}
+
+impl fmt::Display for FileType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FileType::MD => write!(f, "md"),
+        }
+    }
+}
+
+enum FileError {
+    InvalidFileType,
+}
+
+impl fmt::Display for FileError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FileError::InvalidFileType => write!(f, "Invalid file type"),
+        }
+    }
+}
+
+#[derive(Parser, Debug)]
+#[command(author, version, about)]
+struct Args {
+    /// Path to a quiz md file
+    #[arg(short, long)]
+    path: String,
+}
+
+impl Args {
+    fn validate_file(file: &Path) -> Result<(), FileError> {
+        match file.extension().and_then(OsStr::to_str) {
+            Some(extension) => {
+                if let Some(_) = FileType::from_str(extension) {
+                    return Ok(());
+                }
+            }
+            None => return Err(FileError::InvalidFileType),
+        }
+
+        Err(FileError::InvalidFileType)
+    }
+}
 
 pub struct AppState {
     pub cards: StatefulList<Card>,
@@ -38,30 +98,49 @@ fn read_from_file(path: &Path) -> Result<String, io::Error> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let content = read_from_file(Path::new("input.md"))?;
+    let args = Args::parse();
+    let path = Path::new(&args.path);
+
+    if let Err(err) = Args::validate_file(path) {
+        eprintln!("Error: {}", err);
+        std::process::exit(1);
+    };
+
+    let content = read_from_file(path)?;
     // Todo: Don't unwrap()
     let cards = Card::card_parser(content).unwrap();
 
-    enable_raw_mode()?;
-    let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let mut terminal = init_terminal()?;
 
     let app_state = AppState::new(cards);
     let res = run_app(&mut terminal, app_state);
 
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
+    reset_terminal()?;
 
     if let Err(err) = res {
         println!("{:?}", err);
     }
+
+    Ok(())
+}
+
+/// Initializes the terminal.
+fn init_terminal() -> Result<Terminal<CrosstermBackend<io::Stdout>>, Box<dyn Error>> {
+    execute!(io::stdout(), EnterAlternateScreen)?;
+    enable_raw_mode()?;
+
+    let backend = CrosstermBackend::new(io::stdout());
+
+    let mut terminal = Terminal::new(backend)?;
+    terminal.hide_cursor()?;
+
+    Ok(terminal)
+}
+
+/// Resets the terminal.
+fn reset_terminal() -> Result<(), Box<dyn Error>> {
+    disable_raw_mode()?;
+    crossterm::execute!(io::stdout(), LeaveAlternateScreen)?;
 
     Ok(())
 }
