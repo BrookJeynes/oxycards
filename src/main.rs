@@ -22,13 +22,13 @@ use ui::ui;
 
 #[derive(PartialEq)]
 enum FileType {
-    MD,
+    Markdown,
 }
 
 impl FileType {
     fn from_str(file_extension: &str) -> Option<Self> {
         match file_extension {
-            "md" => Some(FileType::MD),
+            "md" => Some(FileType::Markdown),
             _ => None,
         }
     }
@@ -37,7 +37,7 @@ impl FileType {
 impl fmt::Display for FileType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            FileType::MD => write!(f, "md"),
+            FileType::Markdown => write!(f, "md"),
         }
     }
 }
