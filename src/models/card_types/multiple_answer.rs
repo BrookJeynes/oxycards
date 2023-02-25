@@ -1,9 +1,8 @@
 use core::fmt;
 
 use crate::{
-    Card,
     models::{choice::Choice, stateful_list::StatefulList},
-    UserAnswer,
+    Card, UserAnswer,
 };
 
 pub struct MultipleAnswer {
@@ -15,7 +14,7 @@ pub struct MultipleAnswer {
 
 impl MultipleAnswer {
     pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select/unselect choice");
+        String::from("<SPACE>: Select/unselect choice")
     }
 
     pub fn validate_answer(&mut self) -> UserAnswer {
@@ -47,7 +46,6 @@ impl MultipleAnswer {
                 MultipleAnswer::remove_prefix(vec![' ', '*'], &content)
                     .iter()
                     .map(|choice| Choice {
-                        // Todo: maybe don't clone?
                         content: choice.clone(),
                         selected: false,
                     })

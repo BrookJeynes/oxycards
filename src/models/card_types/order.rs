@@ -17,7 +17,7 @@ pub struct Order {
 
 impl Order {
     pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select first item, press SPACE again on another item to swap");
+        return String::from("<SPACE>: Select item, use <Space> again on another item to swap them");
     }
 
     pub fn validate_answer(&mut self) -> UserAnswer {
@@ -49,7 +49,6 @@ impl Order {
             })
             .collect();
 
-        // Todo: shuffle until shuffled != answer
         shuffled.shuffle(&mut rng);
 
         Self {

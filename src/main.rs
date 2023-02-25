@@ -11,24 +11,54 @@ use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use models::card::Card;
+use models::card_types::fill_in_the_blanks::FillInTheBlanks;
 use models::stateful_list::StatefulList;
 use models::user_answer::UserAnswer;
+use regex::Regex;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 use ui::ui;
+pub enum InputMode {
+    Normal,
+    Editing,
+}
+
+pub struct Score {
+    incorrect: usize,
+    correct: usize,
+}
+
+impl Score {
+    fn add_incorrect(&mut self) {
+        self.incorrect += 1;
+    }
+
+    fn add_correct(&mut self) {
+        self.correct += 1;
+    }
+}
+
+impl Default for Score {
+    fn default() -> Self {
+        Self {
+            incorrect: 0,
+            correct: 0,
+        }
+    }
+}
 
 pub struct AppState {
     pub cards: StatefulList<Card>,
-    pub incorrect_answers: usize,
-    pub correct_answers: usize,
+    pub input_mode: InputMode,
+    pub score: Score,
 }
 
 impl AppState {
     fn new(cards: Vec<Card>) -> Self {
         Self {
             cards: StatefulList::with_items(cards),
-            incorrect_answers: 0,
-            correct_answers: 0,
+            score: Score::default(),
+            input_mode: InputMode::Normal,
         }
     }
 }
@@ -73,117 +103,177 @@ fn run_app<B: Backend>(
     loop {
         terminal.draw(|f| ui(f, &mut app_state))?;
 
+        if let Some(val) = app_state.cards.selected_value() {
+            match val {
+                Card::FillInTheBlanks(card) => {
+                    if let UserAnswer::Undecided = card.user_answer {
+                        app_state.input_mode = InputMode::Editing
+                    }
+                }
+                _ => app_state.input_mode = InputMode::Normal,
+            }
+        }
+
         if let Event::Key(key) = event::read()? {
-            match key.code {
-                // Card navigation keys
-                KeyCode::Char('h') | KeyCode::Left => app_state.cards.previous(),
-                KeyCode::Char('l') | KeyCode::Right => app_state.cards.next(),
+            match app_state.input_mode {
+                InputMode::Normal => match key.code {
+                    // Card navigation keys
+                    KeyCode::Char('h') | KeyCode::Left => app_state.cards.previous(),
+                    KeyCode::Char('l') | KeyCode::Right => app_state.cards.next(),
 
-                KeyCode::Char(' ') => {
-                    if let Some(val) = app_state.cards.selected_value() {
-                        match val {
-                            Card::FlashCard(card) => card.show_back(),
-                            Card::MultipleAnswer(card) => {
-                                if let UserAnswer::Undecided = card.user_answer {
-                                    if let Some(index) = card.choices.selected() {
-                                        card.choices.items[index].select()
-                                    }
-                                }
-                            }
-                            Card::MultipleChoice(card) => {
-                                if let Some(index) = card.choices.selected() {
+                    KeyCode::Char(' ') => {
+                        if let Some(val) = app_state.cards.selected_value() {
+                            match val {
+                                Card::FlashCard(card) => card.show_back(),
+                                Card::MultipleAnswer(card) => {
                                     if let UserAnswer::Undecided = card.user_answer {
-                                        card.unselect_all();
-
-                                        card.choices.items[index].select()
+                                        if let Some(index) = card.choices.selected() {
+                                            card.choices.items[index].select()
+                                        }
                                     }
                                 }
-                            }
-                            Card::Order(card) => {
-                                if let UserAnswer::Undecided = card.user_answer {
-                                    if let Some(index) = card.shuffled.selected() {
-                                        card.shuffled.items[index].select()
-                                    }
+                                Card::MultipleChoice(card) => {
+                                    if let Some(index) = card.choices.selected() {
+                                        if let UserAnswer::Undecided = card.user_answer {
+                                            card.unselect_all();
 
-                                    if let Some((a, b)) = card.multiple_selected() {
-                                        card.shuffled.swap(a, b);
-                                        card.unselect_all();
+                                            card.choices.items[index].select()
+                                        }
                                     }
                                 }
-                            }
-                            _ => {}
-                        }
-                    }
-                }
+                                Card::Order(card) => {
+                                    if let UserAnswer::Undecided = card.user_answer {
+                                        if let Some(index) = card.shuffled.selected() {
+                                            card.shuffled.items[index].select()
+                                        }
 
-                KeyCode::Char('k') | KeyCode::Up => {
-                    if let Some(val) = app_state.cards.selected_value() {
-                        match val {
-                            Card::MultipleChoice(card) => card.choices.previous(),
-                            Card::MultipleAnswer(card) => card.choices.previous(),
-                            Card::Order(card) => card.shuffled.previous(),
-                            _ => {}
-                        }
-                    }
-                }
-                KeyCode::Char('j') | KeyCode::Down => {
-                    if let Some(val) = app_state.cards.selected_value() {
-                        match val {
-                            Card::MultipleChoice(card) => card.choices.next(),
-                            Card::MultipleAnswer(card) => card.choices.next(),
-                            Card::Order(card) => card.shuffled.next(),
-                            _ => {}
-                        }
-                    }
-                }
-                KeyCode::Enter => {
-                    if let Some(card) = app_state.cards.selected_value() {
-                        if !card.check_answered() {
-                            match card.validate_answer() {
-                                UserAnswer::Correct => app_state.correct_answers += 1,
-                                UserAnswer::Incorrect => app_state.incorrect_answers += 1,
-                                UserAnswer::Undecided => {}
+                                        if let Some((a, b)) = card.multiple_selected() {
+                                            card.shuffled.swap(a, b);
+                                            card.unselect_all();
+                                        }
+                                    }
+                                }
+                                _ => {}
                             }
                         }
                     }
-                }
-                KeyCode::Char('y') => {
-                    if let Some(val) = app_state.cards.selected_value() {
-                        match val {
-                            Card::FlashCard(card) => {
-                                if card.show_validation_popup
-                                    && card.user_answer == UserAnswer::Undecided
-                                {
-                                    card.user_answer = UserAnswer::Correct;
-                                    app_state.correct_answers += 1
+
+                    KeyCode::Char('k') | KeyCode::Up => {
+                        if let Some(val) = app_state.cards.selected_value() {
+                            match val {
+                                Card::MultipleChoice(card) => card.choices.previous(),
+                                Card::MultipleAnswer(card) => card.choices.previous(),
+                                Card::Order(card) => card.shuffled.previous(),
+                                _ => {}
+                            }
+                        }
+                    }
+                    KeyCode::Char('j') | KeyCode::Down => {
+                        if let Some(val) = app_state.cards.selected_value() {
+                            match val {
+                                Card::MultipleChoice(card) => card.choices.next(),
+                                Card::MultipleAnswer(card) => card.choices.next(),
+                                Card::Order(card) => card.shuffled.next(),
+                                _ => {}
+                            }
+                        }
+                    }
+                    KeyCode::Enter => {
+                        if let Some(card) = app_state.cards.selected_value() {
+                            if !card.check_answered() {
+                                match card.validate_answer() {
+                                    UserAnswer::Correct => app_state.score.add_correct(),
+                                    UserAnswer::Incorrect => app_state.score.add_incorrect(),
+                                    UserAnswer::Undecided => {}
                                 }
                             }
-
-                            _ => {}
                         }
                     }
-                }
-                KeyCode::Char('n') => {
-                    if let Some(val) = app_state.cards.selected_value() {
-                        match val {
-                            Card::FlashCard(card) => {
-                                if card.show_validation_popup
-                                    && card.user_answer == UserAnswer::Undecided
-                                {
-                                    card.user_answer = UserAnswer::Incorrect;
-                                    app_state.incorrect_answers += 1
+                    KeyCode::Char('y') => {
+                        if let Some(val) = app_state.cards.selected_value() {
+                            match val {
+                                Card::FlashCard(card) => {
+                                    if card.show_validation_popup
+                                        && card.user_answer == UserAnswer::Undecided
+                                    {
+                                        card.user_answer = UserAnswer::Correct;
+                                        app_state.score.add_correct()
+                                    }
                                 }
-                            }
 
-                            _ => {}
+                                _ => {}
+                            }
                         }
                     }
-                }
+                    KeyCode::Char('n') => {
+                        if let Some(val) = app_state.cards.selected_value() {
+                            match val {
+                                Card::FlashCard(card) => {
+                                    if card.show_validation_popup
+                                        && card.user_answer == UserAnswer::Undecided
+                                    {
+                                        card.user_answer = UserAnswer::Incorrect;
+                                        app_state.score.add_incorrect()
+                                    }
+                                }
 
-                // Exit keys
-                KeyCode::Char('q') => return Ok(()),
+                                _ => {}
+                            }
+                        }
+                    }
 
-                _ => {}
+                    // Exit keys
+                    KeyCode::Char('q') => return Ok(()),
+
+                    _ => {}
+                },
+                InputMode::Editing => match key.code {
+                    KeyCode::Tab => {
+                        if let Some(val) = app_state.cards.selected_value() {
+                            match val {
+                                Card::FillInTheBlanks(card) => {
+                                    card.next();
+                                }
+
+                                _ => {}
+                            }
+                        }
+                    }
+                    KeyCode::Enter => {
+                        if let Some(card) = app_state.cards.selected_value() {
+                            if !card.check_answered() {
+                                match card.validate_answer() {
+                                    UserAnswer::Correct => app_state.score.add_correct(),
+                                    UserAnswer::Incorrect => app_state.score.add_incorrect(),
+                                    UserAnswer::Undecided => {}
+                                }
+
+                                app_state.input_mode = InputMode::Normal;
+                            }
+                        }
+                    }
+                    KeyCode::Char(c) => {
+                        if let Some(card_) = app_state.cards.selected_value() {
+                            if let Card::FillInTheBlanks(card) = card_ {
+                                card.user_input[card.blank_index].push(c);
+                                card.update_output();
+                            }
+                        }
+                    }
+                    KeyCode::Backspace => {
+                        if let Some(card_) = app_state.cards.selected_value() {
+                            if let Card::FillInTheBlanks(card) = card_ {
+                                card.user_input[card.blank_index].pop();
+                                card.update_output();
+                            }
+                        }
+                    }
+                    KeyCode::Left => app_state.cards.previous(),
+                    KeyCode::Right => app_state.cards.next(),
+                    // Exit keys
+                    KeyCode::Esc => return Ok(()),
+                    _ => {}
+                },
             }
         }
     }

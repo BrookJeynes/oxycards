@@ -7,12 +7,18 @@ use tui::{
     Frame,
 };
 
-use crate::{models::{card::Card, user_answer::UserAnswer}, AppState};
+use crate::{
+    models::{
+        card::Card, card_types::fill_in_the_blanks::FillInTheBlanks, user_answer::UserAnswer,
+    },
+    AppState,
+};
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     let mut card_question = String::new();
 
-    let default_instructions = "q: Quit application";
+    let default_instructions =
+        "q: Quit application (unless specified otherwise), <ENTER>: Validate answer";
 
     let size = f.size();
 
@@ -55,7 +61,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
 
     // Create card footer content
     let incorrect = Paragraph::new(create_styled_span(
-        app_state.incorrect_answers.to_string().as_ref(),
+        app_state.score.incorrect.to_string().as_ref(),
         Color::Red,
     ))
     .alignment(Alignment::Left);
@@ -72,7 +78,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     .alignment(Alignment::Center);
 
     let correct = Paragraph::new(Span::styled(
-        app_state.correct_answers.to_string(),
+        app_state.score.correct.to_string(),
         Style::default().fg(Color::Green),
     ))
     .alignment(Alignment::Right);
@@ -174,10 +180,13 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
             Card::FillInTheBlanks(card) => {
                 card_question = card.question.clone();
 
-                let content = Paragraph::new(card.content.to_string())
-                    .block(create_block("Content"))
-                    .wrap(Wrap { trim: false })
-                    .alignment(Alignment::Center);
+                let content = Paragraph::new(match card.user_answer {
+                    UserAnswer::Undecided => vec![Spans::from(card.output.to_string())],
+                    _ => card.validated_output(),
+                })
+                .block(create_block("Content"))
+                .wrap(Wrap { trim: false })
+                .alignment(Alignment::Center);
 
                 f.render_widget(content, card_layout[1]);
             }
@@ -224,13 +233,16 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     );
 
     let instructions = match app_state.cards.selected_value() {
-      Some(card) => card.instructions(),
-      None => String::new()
+        Some(card) => card.instructions(),
+        None => String::new(),
     };
 
     // Render instructions from our card instance
-    f.render_widget(Paragraph::new(format!("{}\n{}", instructions, default_instructions)).alignment(Alignment::Left), chunks[2]);
-
+    f.render_widget(
+        Paragraph::new(format!("{}\n{}", instructions, default_instructions))
+            .alignment(Alignment::Left),
+        chunks[2],
+    );
 
     // Render card footer
     f.render_widget(incorrect, inner_card_layout[1]);
@@ -263,4 +275,43 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             .as_ref(),
         )
         .split(popup_layout[1])[1]
+}
+
+impl FillInTheBlanks {
+    pub fn validated_output(&mut self) -> Vec<Spans> {
+        let new_content = self
+            .content
+            .split("__")
+            .take(self.answers.len())
+            .enumerate()
+            .map(|(index, item)| {
+                let user_content = match self.user_input.get(index) {
+                    Some(content) => content,
+                    None => "",
+                };
+
+                vec![
+                    Span::from(item),
+                    Span::styled(
+                        user_content,
+                        Style::default().fg(
+                            if self
+                                .answers
+                                .get(&index)
+                                .unwrap_or(&vec![])
+                                .contains(&user_content.to_string())
+                            {
+                                Color::Green
+                            } else {
+                                Color::Red
+                            },
+                        ),
+                    ),
+                ]
+            })
+            .flatten()
+            .collect::<Vec<Span>>();
+
+        vec![Spans::from(new_content)]
+    }
 }
