@@ -2,7 +2,7 @@
 name = "quiz-rs"
 version = "1.0.0"
 edition = "2021"
-authors = ["Brook Jeynes jeynesbrook@pm.me", "Tawny ?"]
+authors = ["Brook Jeynes jeynesbrook@pm.me", "twny hitawnie@gmail.com"]
 license = "MIT"
 description = "An interactive quiz application built for the terminal."
 documentation = "https://brookjeynes.github.io/quiz-rs/"
