@@ -7,17 +7,19 @@ use std::{error::Error, fs, io};
 
 use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode};
 use crossterm::execute;
+use crossterm::style::Stylize;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
+
 use models::card::Card;
-use models::card_types::fill_in_the_blanks::FillInTheBlanks;
 use models::stateful_list::StatefulList;
 use models::user_answer::UserAnswer;
-use regex::Regex;
+
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 use ui::ui;
+
 pub enum InputMode {
     Normal,
     Editing,
@@ -69,8 +71,13 @@ fn read_from_file(path: &Path) -> Result<String, io::Error> {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let content = read_from_file(Path::new("input.md"))?;
-    // Todo: Don't unwrap()
-    let cards = Card::card_parser(content).unwrap();
+    let cards = match Card::card_parser(content) {
+        Ok(cards) => cards,
+        Err(err) => {
+            eprintln!("{}: {}", "Parsing Error".red().bold(), err);
+            std::process::exit(1);
+        }
+    };
 
     enable_raw_mode()?;
     let mut stdout = stdout();

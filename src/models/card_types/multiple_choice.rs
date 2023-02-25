@@ -1,7 +1,7 @@
 use core::fmt;
 
 use crate::{
-    models::{choice::Choice, stateful_list::StatefulList},
+    models::{choice::Choice, errors::parsing_error::ParsingError, stateful_list::StatefulList},
     Card, UserAnswer,
 };
 
@@ -39,10 +39,10 @@ impl MultipleChoice {
         String::from("<SPACE>: Select/unselect choice")
     }
 
-    pub fn parse_raw(content: String) -> Self {
-        let (question, content) = Card::extract_card_title(&content);
+    pub fn parse_raw(content: String) -> Result<Self, ParsingError> {
+        let (question, content) = Card::extract_card_title(&content)?;
 
-        Self {
+        Ok(Self {
             question,
             choices: StatefulList::with_items(
                 MultipleChoice::remove_prefix(vec!['-', '*'], &content)
@@ -56,7 +56,7 @@ impl MultipleChoice {
             ),
             answers: MultipleChoice::remove_prefix(vec!['*'], &content),
             user_answer: UserAnswer::Undecided,
-        }
+        })
     }
 
     /// Remove prefix (* | -) from item
