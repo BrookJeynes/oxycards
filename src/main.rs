@@ -2,9 +2,9 @@ pub mod models;
 pub mod ui;
 
 use clap::Parser;
+use models::args::Args;
 
 use core::fmt;
-use std::ffi::OsStr;
 use std::path::Path;
 use std::{error::Error, fs, io};
 
@@ -20,29 +20,7 @@ use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 use ui::ui;
 
-#[derive(PartialEq)]
-enum FileType {
-    Markdown,
-}
-
-impl FileType {
-    fn from_str(file_extension: &str) -> Option<Self> {
-        match file_extension {
-            "md" => Some(FileType::Markdown),
-            _ => None,
-        }
-    }
-}
-
-impl fmt::Display for FileType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            FileType::Markdown => write!(f, "md"),
-        }
-    }
-}
-
-enum FileError {
+pub enum FileError {
     InvalidFileType,
 }
 
@@ -51,29 +29,6 @@ impl fmt::Display for FileError {
         match self {
             FileError::InvalidFileType => write!(f, "Invalid file type"),
         }
-    }
-}
-
-#[derive(Parser, Debug)]
-#[command(author, version, about)]
-struct Args {
-    /// Path to a quiz md file
-    #[arg(short, long)]
-    path: String,
-}
-
-impl Args {
-    fn validate_file(file: &Path) -> Result<(), FileError> {
-        match file.extension().and_then(OsStr::to_str) {
-            Some(extension) => {
-                if let Some(_) = FileType::from_str(extension) {
-                    return Ok(());
-                }
-            }
-            None => return Err(FileError::InvalidFileType),
-        }
-
-        Err(FileError::InvalidFileType)
     }
 }
 
