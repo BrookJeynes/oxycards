@@ -72,26 +72,50 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Todo: Don't unwrap()
     let cards = Card::card_parser(content).unwrap();
 
-    enable_raw_mode()?;
-    let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let mut terminal = init_terminal()?;
 
     let app_state = AppState::new(cards);
     let res = run_app(&mut terminal, app_state);
 
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
+    reset_terminal()?;
 
     if let Err(err) = res {
         println!("{:?}", err);
     }
+
+    Ok(())
+}
+
+/// Initializes the terminal.
+fn init_terminal() -> Result<Terminal<CrosstermBackend<io::Stdout>>, Box<dyn Error>> {
+    execute!(io::stdout(), EnterAlternateScreen)?;
+    enable_raw_mode()?;
+
+    let backend = CrosstermBackend::new(io::stdout());
+
+    let mut terminal = Terminal::new(backend)?;
+    terminal.hide_cursor()?;
+
+    // Because a panic interrupts the normal control flow, manually resetting the
+    // terminal at the end of `main` won't do us any good. Instead, we need to
+    // make sure to set up a panic hook that first resets the terminal before
+    // handling the panic. This both reuses the standard panic hook to ensure a
+    // consistent panic handling UX and properly resets the terminal to not
+    // distort the output.
+    let original_hook = std::panic::take_hook();
+
+    std::panic::set_hook(Box::new(move |panic| {
+        reset_terminal().unwrap();
+        original_hook(panic);
+    }));
+
+    Ok(terminal)
+}
+
+/// Resets the terminal.
+fn reset_terminal() -> Result<(), Box<dyn Error>> {
+    disable_raw_mode()?;
+    crossterm::execute!(io::stdout(), LeaveAlternateScreen)?;
 
     Ok(())
 }
