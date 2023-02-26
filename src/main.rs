@@ -5,6 +5,7 @@ use clap::Parser;
 use models::args::Args;
 
 use core::fmt;
+use std::io::stdout;
 use std::path::Path;
 use std::{error::Error, fs, io};
 
@@ -65,37 +66,22 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Todo: Don't unwrap()
     let cards = Card::card_parser(content).unwrap();
 
-    let mut terminal = init_terminal()?;
+    enable_raw_mode()?;
+    let mut stdout = stdout();
+    execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
 
     let app_state = AppState::new(cards);
     let res = run_app(&mut terminal, app_state);
 
-    reset_terminal()?;
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen,)?;
+    terminal.show_cursor()?;
 
     if let Err(err) = res {
         println!("{:?}", err);
     }
-
-    Ok(())
-}
-
-/// Initializes the terminal.
-fn init_terminal() -> Result<Terminal<CrosstermBackend<io::Stdout>>, Box<dyn Error>> {
-    execute!(io::stdout(), EnterAlternateScreen)?;
-    enable_raw_mode()?;
-
-    let backend = CrosstermBackend::new(io::stdout());
-
-    let mut terminal = Terminal::new(backend)?;
-    terminal.hide_cursor()?;
-
-    Ok(terminal)
-}
-
-/// Resets the terminal.
-fn reset_terminal() -> Result<(), Box<dyn Error>> {
-    disable_raw_mode()?;
-    crossterm::execute!(io::stdout(), LeaveAlternateScreen)?;
 
     Ok(())
 }
