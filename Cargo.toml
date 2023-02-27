@@ -10,3 +10,4 @@ regex = "1.7.1"                    # An implementation of regular expressions fo
 rand = "0.8.5"              # Random number generators and other randomness functionality. 
 tui = "0.19.0"                    # A library to build rich terminal user interfaces or dashboards 
 crossterm = "0.26.0"            # A crossplatform terminal library for manipulating terminals.
+clap = { version = "4.1.6", features = ["derive"] }

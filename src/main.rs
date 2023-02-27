@@ -1,11 +1,15 @@
 pub mod models;
 pub mod ui;
 
+use clap::Parser;
+use models::args::Args;
+
+use core::fmt;
 use std::io::stdout;
 use std::path::Path;
 use std::{error::Error, fs, io};
 
-use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode};
+use crossterm::event::{self, Event, KeyCode};
 use crossterm::execute;
 use crossterm::style::Stylize;
 use crossterm::terminal::{
@@ -49,6 +53,18 @@ impl Default for Score {
     }
 }
 
+pub enum FileError {
+    InvalidFileType,
+}
+
+impl fmt::Display for FileError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FileError::InvalidFileType => write!(f, "Invalid file type"),
+        }
+    }
+}
+
 pub struct AppState {
     pub cards: StatefulList<Card>,
     pub input_mode: InputMode,
@@ -70,7 +86,15 @@ fn read_from_file(path: &Path) -> Result<String, io::Error> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let content = read_from_file(Path::new("input.md"))?;
+    let args = Args::parse();
+    let path = Path::new(&args.path);
+
+    if let Err(err) = Args::validate_file(path) {
+        eprintln!("Error: {}", err);
+        std::process::exit(1);
+    };
+
+    let content = read_from_file(path)?;
     let cards = match Card::card_parser(content) {
         Ok(cards) => cards,
         Err(err) => {
@@ -79,26 +103,50 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     };
 
-    enable_raw_mode()?;
-    let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let mut terminal = init_terminal()?;
 
     let app_state = AppState::new(cards);
     let res = run_app(&mut terminal, app_state);
 
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
+    reset_terminal()?;
 
     if let Err(err) = res {
         println!("{:?}", err);
     }
+
+    Ok(())
+}
+
+/// Initializes the terminal.
+fn init_terminal() -> Result<Terminal<CrosstermBackend<io::Stdout>>, Box<dyn Error>> {
+    execute!(io::stdout(), EnterAlternateScreen)?;
+    enable_raw_mode()?;
+
+    let backend = CrosstermBackend::new(io::stdout());
+
+    let mut terminal = Terminal::new(backend)?;
+    terminal.hide_cursor()?;
+
+    // Because a panic interrupts the normal control flow, manually resetting the
+    // terminal at the end of `main` won't do us any good. Instead, we need to
+    // make sure to set up a panic hook that first resets the terminal before
+    // handling the panic. This both reuses the standard panic hook to ensure a
+    // consistent panic handling UX and properly resets the terminal to not
+    // distort the output.
+    let original_hook = std::panic::take_hook();
+
+    std::panic::set_hook(Box::new(move |panic| {
+        reset_terminal().unwrap();
+        original_hook(panic);
+    }));
+
+    Ok(terminal)
+}
+
+/// Resets the terminal.
+fn reset_terminal() -> Result<(), Box<dyn Error>> {
+    disable_raw_mode()?;
+    crossterm::execute!(io::stdout(), LeaveAlternateScreen)?;
 
     Ok(())
 }
