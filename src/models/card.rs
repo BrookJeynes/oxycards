@@ -2,7 +2,7 @@ use core::fmt;
 
 use crossterm::style::Stylize;
 
-use crate::UserAnswer;
+use crate::{reset_terminal, UserAnswer};
 
 use super::{
     card_types::{
@@ -102,6 +102,7 @@ impl Card {
                         "Parsing Error".red().bold(),
                         ParsingError::IncorrectDivider
                     );
+                    reset_terminal().unwrap();
                     std::process::exit(1);
                 }
 
@@ -109,30 +110,35 @@ impl Card {
                     "flashcard" => Card::FlashCard(
                         FlashCard::parse_raw(sections[1].to_string()).unwrap_or_else(|err| {
                             eprintln!("{}: {}", "Parsing Error".red().bold(), err);
+                            reset_terminal().unwrap();
                             std::process::exit(1);
                         }),
                     ),
                     "multiple_choice" => Card::MultipleChoice(
                         MultipleChoice::parse_raw(sections[1].to_string()).unwrap_or_else(|err| {
                             eprintln!("{}: {}", "Parsing Error".red().bold(), err);
+                            reset_terminal().unwrap();
                             std::process::exit(1);
                         }),
                     ),
                     "multiple_answer" => Card::MultipleAnswer(
                         MultipleAnswer::parse_raw(sections[1].to_string()).unwrap_or_else(|err| {
                             eprintln!("{}: {}", "Parsing Error".red().bold(), err);
+                            reset_terminal().unwrap();
                             std::process::exit(1);
                         }),
                     ),
                     "fill_in_the_blanks" => Card::FillInTheBlanks(
                         FillInTheBlanks::parse_raw(sections[1].to_string()).unwrap_or_else(|err| {
                             eprintln!("{}: {}", "Parsing Error".red().bold(), err);
+                            reset_terminal().unwrap();
                             std::process::exit(1);
                         }),
                     ),
                     "order" => Card::Order(
                         Order::parse_raw(sections[1].to_string()).unwrap_or_else(|err| {
                             eprintln!("{}: {}", "Parsing Error".red().bold(), err);
+                            reset_terminal().unwrap();
                             std::process::exit(1);
                         }),
                     ),
@@ -142,6 +148,7 @@ impl Card {
                             "Parsing Error".red().bold(),
                             ParsingError::NoCardType
                         );
+                        reset_terminal().unwrap();
                         std::process::exit(1);
                     }
                 }

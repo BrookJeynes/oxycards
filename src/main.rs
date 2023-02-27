@@ -90,7 +90,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let path = Path::new(&args.path);
 
     if let Err(err) = Args::validate_file(path) {
-        eprintln!("Error: {}", err);
+        eprintln!("{}: {}", "Parsing Error".red().bold(), err);
+        reset_terminal().unwrap();
         std::process::exit(1);
     };
 
@@ -99,6 +100,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         Ok(cards) => cards,
         Err(err) => {
             eprintln!("{}: {}", "Parsing Error".red().bold(), err);
+            reset_terminal().unwrap();
             std::process::exit(1);
         }
     };
