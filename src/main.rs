@@ -1,11 +1,15 @@
 pub mod models;
 pub mod ui;
 
+use clap::Parser;
+use models::args::Args;
+
+use core::fmt;
 use std::io::stdout;
 use std::path::Path;
 use std::{error::Error, fs, io};
 
-use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode};
+use crossterm::event::{self, Event, KeyCode};
 use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
@@ -47,6 +51,18 @@ impl Default for Score {
     }
 }
 
+pub enum FileError {
+    InvalidFileType,
+}
+
+impl fmt::Display for FileError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FileError::InvalidFileType => write!(f, "Invalid file type"),
+        }
+    }
+}
+
 pub struct AppState {
     pub cards: StatefulList<Card>,
     pub input_mode: InputMode,
@@ -68,13 +84,21 @@ fn read_from_file(path: &Path) -> Result<String, io::Error> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let content = read_from_file(Path::new("input.md"))?;
+    let args = Args::parse();
+    let path = Path::new(&args.path);
+
+    if let Err(err) = Args::validate_file(path) {
+        eprintln!("Error: {}", err);
+        std::process::exit(1);
+    };
+
+    let content = read_from_file(path)?;
     // Todo: Don't unwrap()
     let cards = Card::card_parser(content).unwrap();
 
     enable_raw_mode()?;
     let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -82,11 +106,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let res = run_app(&mut terminal, app_state);
 
     disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen,)?;
     terminal.show_cursor()?;
 
     if let Err(err) = res {
