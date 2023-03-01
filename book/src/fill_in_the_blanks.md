@@ -1,6 +1,6 @@
 # Fill in the Blanks
 
-![Fill in the Blanks example]()
+![Fill in the Blanks example](https://user-images.githubusercontent.com/25432120/222114868-e6f4f6d5-fcc9-40df-a7c9-41a48b01df0b.gif)
 
 Fill in the blank cards allow users to enter their own answers within a series
 of defined blank spaces.

@@ -5,7 +5,7 @@ Oxycards is a quiz card application built within the terminal.
 
 ## Screenshots
 
-![Example cards](https://user-images.githubusercontent.com/123209942/217742705-8db66fc1-6a64-4de1-80bc-3fa2010aa4d9.png)
+![App demo](https://user-images.githubusercontent.com/25432120/222114920-a4fe8ade-7eb5-4aa2-8732-dc6675b7526b.gif)
 
 
 ## Features

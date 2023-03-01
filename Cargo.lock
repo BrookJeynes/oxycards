@@ -247,6 +247,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b7820b9daea5457c9f21c69448905d723fbd21136ccf521748f23fd49e723ee"
 
 [[package]]
+name = "oxycards"
+version = "1.0.0"
+dependencies = [
+ "clap",
+ "crossterm 0.26.0",
+ "rand",
+ "regex",
+ "tui",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
