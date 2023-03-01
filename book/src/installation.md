@@ -1,17 +1,28 @@
 # Installation
 
-## Run Locally
+## General Installation
+After ensuring you have Rust installed, simply run the following command to install oxycards:
+```bash
+cargo install oxycards
+```
+
+To uninstall, simply run the following command:
+```bash
+cargo uninstall oxycards
+```
+
+## Building Locally
 
 1. Clone the project
 
 ```bash
-  git clone https://github.com/BrookJeynes/quiz-rs
+  git clone https://github.com/BrookJeynes/oxycards
 ```
 
 2. Go to the project directory
 
 ```bash
-  cd quiz-rs
+  cd oxycards
 ```
 
 3. Create a set of cards within `input.md` at the projects root. See the [Cards](./cards.md) section for more information about card formatting.

@@ -1,6 +1,6 @@
 # Order
 
-![Order Example]()
+![Order Example](https://user-images.githubusercontent.com/25432120/222114913-9e3827af-7293-4d5d-8a1c-8c8b7f6fe232.gif)
 
 Order cards give the user a randomly sorted list of options in which they must
 re-sort them into the correct ordering.
