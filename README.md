@@ -1,6 +1,6 @@
-# Quiz-rs - Terminal quiz cards application
+# Oxycards - Terminal based quiz cards 
 
-Quiz-rs is a quiz card application built within the terminal.
+Oxycards is a quiz card application built within the terminal.
 
 
 ## Screenshots
@@ -20,8 +20,8 @@ Quiz-rs is a quiz card application built within the terminal.
 
 
 ## Links
-- [Documentation](https://brookjeynes.github.io/quiz-rs/)
-- [Installation](https://brookjeynes.github.io/quiz-rs/installation)
+- [Documentation](https://brookjeynes.github.io/oxycards/)
+- [Installation](https://brookjeynes.github.io/oxycards/installation)
 
 
 ## Roadmap
@@ -32,7 +32,7 @@ Quiz-rs is a quiz card application built within the terminal.
     - [x] Fill in the blanks
     - [x] Place in the correct order
 - [x] Read in card input file from command line
-- [ ] Release on distribution platforms for easy install
+- [x] Release on distribution platforms for easy install
 - [ ] Allow users to change certain settings via a config file
 - [ ] Add spaced repetition
 - [ ] Website for users to share their decks
