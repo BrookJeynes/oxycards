@@ -1,9 +1,8 @@
 use core::fmt;
 
 use crate::{
-    Card,
-    models::{choice::Choice, stateful_list::StatefulList},
-    UserAnswer,
+    models::{choice::Choice, errors::parsing_error::ParsingError, stateful_list::StatefulList},
+    Card, UserAnswer,
 };
 
 pub struct MultipleAnswer {
@@ -15,7 +14,7 @@ pub struct MultipleAnswer {
 
 impl MultipleAnswer {
     pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select/unselect choice");
+        String::from("<SPACE>: Select/unselect choice")
     }
 
     pub fn validate_answer(&mut self) -> UserAnswer {
@@ -38,16 +37,15 @@ impl MultipleAnswer {
         self.user_answer
     }
 
-    pub fn parse_raw(content: String) -> Self {
-        let (question, content) = Card::extract_card_title(&content);
+    pub fn parse_raw(content: String) -> Result<Self, ParsingError> {
+        let (question, content) = Card::extract_card_title(&content)?;
 
-        Self {
+        Ok(Self {
             question,
             choices: StatefulList::with_items(
                 MultipleAnswer::remove_prefix(vec![' ', '*'], &content)
                     .iter()
                     .map(|choice| Choice {
-                        // Todo: maybe don't clone?
                         content: choice.clone(),
                         selected: false,
                     })
@@ -55,7 +53,7 @@ impl MultipleAnswer {
             ),
             answers: MultipleAnswer::remove_prefix(vec!['*'], &content),
             user_answer: UserAnswer::Undecided,
-        }
+        })
     }
 
     /// Remove prefix (* | -) from item

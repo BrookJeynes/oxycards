@@ -3,7 +3,7 @@ use core::fmt;
 use rand::seq::SliceRandom;
 
 use crate::{
-    models::{choice::Choice, stateful_list::StatefulList},
+    models::{choice::Choice, errors::parsing_error::ParsingError, stateful_list::StatefulList},
     Card, UserAnswer,
 };
 
@@ -17,7 +17,9 @@ pub struct Order {
 
 impl Order {
     pub fn instructions(&self) -> String {
-        return String::from("SPACE: Select first item, press SPACE again on another item to swap");
+        return String::from(
+            "<SPACE>: Select item, use <Space> again on another item to swap them",
+        );
     }
 
     pub fn validate_answer(&mut self) -> UserAnswer {
@@ -37,8 +39,8 @@ impl Order {
         self.user_answer
     }
 
-    pub fn parse_raw(content: String) -> Self {
-        let (question, content) = Card::extract_card_title(&content);
+    pub fn parse_raw(content: String) -> Result<Self, ParsingError> {
+        let (question, content) = Card::extract_card_title(&content)?;
         let mut rng = rand::thread_rng();
 
         let mut shuffled: Vec<Choice> = content
@@ -49,15 +51,14 @@ impl Order {
             })
             .collect();
 
-        // Todo: shuffle until shuffled != answer
         shuffled.shuffle(&mut rng);
 
-        Self {
+        Ok(Self {
             question,
             shuffled: StatefulList::with_items(shuffled),
             answer: content.lines().map(|line| line[3..].to_string()).collect(),
             user_answer: UserAnswer::Undecided,
-        }
+        })
     }
 
     /// Check if there are multiple items currently selected

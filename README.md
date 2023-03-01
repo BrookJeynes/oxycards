@@ -25,15 +25,16 @@ Quiz-rs is a quiz card application built within the terminal.
 
 
 ## Roadmap
-- [ ] Complete all basic card types
+- [x] Complete all basic card types
     - [x] Multiple choice
     - [x] Multiple answer
     - [x] Flashcard
-    - [ ] Fill in the blanks
+    - [x] Fill in the blanks
     - [x] Place in the correct order
-- [ ] Read in card input file from command line
-- [ ] Allow users to change certain settings via a config file
+- [x] Read in card input file from command line
 - [ ] Release on distribution platforms for easy install
+- [ ] Allow users to change certain settings via a config file
+- [ ] Add spaced repetition
 - [ ] Website for users to share their decks
 
 
