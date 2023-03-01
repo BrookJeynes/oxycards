@@ -1,10 +1,15 @@
 use core::fmt;
 
-use crate::UserAnswer;
+use crossterm::style::Stylize;
 
-use super::card_types::{
-    fill_in_the_blanks::FillInTheBlanks, flashcard::FlashCard, multiple_answer::MultipleAnswer,
-    multiple_choice::MultipleChoice, order::Order,
+use crate::{reset_terminal, UserAnswer};
+
+use super::{
+    card_types::{
+        fill_in_the_blanks::FillInTheBlanks, flashcard::FlashCard, multiple_answer::MultipleAnswer,
+        multiple_choice::MultipleChoice, order::Order,
+    },
+    errors::parsing_error::ParsingError,
 };
 
 pub enum Card {
@@ -55,49 +60,89 @@ impl_various!(
     Order
 );
 
+macro_rules! parse_cards {
+    ($(($card_variant:ident, $card_type:expr)),*) => {
+        impl Card {
+            pub fn card_parser(content: String) -> Result<Vec<Self>, ParsingError> {
+                let cards: Vec<Card> = content
+                    .split("---")
+                    .map(|section| {
+                        let sections = section
+                            .trim()
+                            .split("\n\n")
+                            .filter(|item| !item.is_empty())
+                            .collect::<Vec<&str>>();
 
-#[derive(Debug)]
-pub enum ParsingError {
-    NoCardType,
+                        if sections.is_empty() {
+                            eprintln!(
+                                "{}: {}",
+                                "Parsing Error".red().bold(),
+                                ParsingError::IncorrectDivider
+                            );
+                            reset_terminal().unwrap();
+                            std::process::exit(1);
+                        }
+
+                        match sections[0].to_lowercase().as_str() {
+                            $($card_type => Card::$card_variant(
+                                $card_variant::parse_raw(sections[1].to_string()).unwrap_or_else(
+                                    |err| {
+                                        eprintln!("{}: {}", "Parsing Error".red().bold(), err);
+                                        reset_terminal().unwrap();
+                                        std::process::exit(1);
+                                    },
+                                ),
+                            )),*,
+                            _ => {
+                                eprintln!(
+                                    "{}: {}",
+                                    "Parsing Error".red().bold(),
+                                    ParsingError::NoCardType
+                                );
+                                reset_terminal().unwrap();
+                                std::process::exit(1);
+                            }
+                        }
+                    })
+                    .collect();
+
+                Ok(cards)
+            }
+        }
+    };
 }
 
+parse_cards!(
+    (FlashCard, "flashcard"),
+    (MultipleAnswer, "multiple_answer"),
+    (MultipleChoice, "multiple_choice"),
+    (FillInTheBlanks, "fill_in_the_blanks"),
+    (Order, "order")
+);
+
 impl Card {
-    pub fn extract_card_title(content: &String) -> (String, String) {
-        // Don't unwrap
-        let question = content.lines().nth(0).unwrap()[1..].trim().to_string();
+    pub fn extract_card_title(content: &String) -> Result<(String, String), ParsingError> {
+        let question = match content.lines().nth(0) {
+            Some(val) => {
+                if val.is_empty() {
+                    return Err(ParsingError::NoQuestion);
+                }
+
+                if val.chars().nth(0).unwrap_or(' ') != '#' {
+                    return Err(ParsingError::NoQuestion);
+                }
+
+                val[1..].trim().to_string()
+            }
+            None => return Err(ParsingError::NoQuestion),
+        };
+
         let content = content.lines().skip(1).collect::<Vec<&str>>().join("\n");
 
-        (question, content)
-    }
+        if content.is_empty() {
+            return Err(ParsingError::NoContent);
+        }
 
-    pub fn card_parser(content: String) -> Result<Vec<Self>, ParsingError> {
-        let cards: Vec<Card> = content
-            .split("---")
-            .map(|section| {
-                let sections = section
-                    .trim()
-                    .split("\n\n")
-                    .filter(|item| !item.is_empty())
-                    .collect::<Vec<&str>>();
-
-                match sections[0].to_lowercase().as_str() {
-                    "flashcard" => Card::FlashCard(FlashCard::parse_raw(sections[1].to_string())),
-                    "multiple_choice" => {
-                        Card::MultipleChoice(MultipleChoice::parse_raw(sections[1].to_string()))
-                    }
-                    "multiple_answer" => {
-                        Card::MultipleAnswer(MultipleAnswer::parse_raw(sections[1].to_string()))
-                    }
-                    "fill_in_the_blanks" => {
-                        Card::FillInTheBlanks(FillInTheBlanks::parse_raw(sections[1].to_string()))
-                    }
-                    "order" => Card::Order(Order::parse_raw(sections[1].to_string())),
-                    // Replace with ParsingError datatype
-                    _ => panic!("Parsing Error"),
-                }
-            })
-            .collect();
-
-        Ok(cards)
+        Ok((question, content))
     }
 }

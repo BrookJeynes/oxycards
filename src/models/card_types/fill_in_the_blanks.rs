@@ -2,7 +2,10 @@ use core::fmt;
 use regex::Regex;
 use std::collections::HashMap;
 
-use crate::{models::card::Card, UserAnswer};
+use crate::{
+    models::{card::Card, errors::parsing_error::ParsingError},
+    UserAnswer,
+};
 
 #[derive(Debug)]
 pub struct Answer {
@@ -25,8 +28,8 @@ impl FillInTheBlanks {
         false
     }
 
-    pub fn parse_raw(content: String) -> Self {
-        let (question, content) = Card::extract_card_title(&content);
+    pub fn parse_raw(content: String) -> Result<Self, ParsingError> {
+        let (question, content) = Card::extract_card_title(&content)?;
         let re = Regex::new(r"_(.*?)_").expect("Error with regex string.");
 
         let answers = HashMap::from(
@@ -44,7 +47,7 @@ impl FillInTheBlanks {
         // Create an array with empty string of size answers
         let user_input: Vec<String> = answers.iter().map(|_| String::new()).collect();
 
-        Self {
+        Ok(Self {
             question,
             content: re.replace_all(content.as_ref(), "__").to_string(),
             answers,
@@ -52,7 +55,7 @@ impl FillInTheBlanks {
             user_input,
             blank_index: 0,
             user_answer: UserAnswer::Undecided,
-        }
+        })
     }
 
     /// Move to the next fill-in-the-blank spot

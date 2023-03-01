@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{Card, UserAnswer};
+use crate::{models::errors::parsing_error::ParsingError, Card, UserAnswer};
 
 pub struct FlashCard {
     pub question: String,
@@ -22,17 +22,17 @@ impl FlashCard {
         UserAnswer::Undecided
     }
 
-    pub fn parse_raw(content: String) -> Self {
-        let (question, content) = Card::extract_card_title(&content);
+    pub fn parse_raw(content: String) -> Result<Self, ParsingError> {
+        let (question, content) = Card::extract_card_title(&content)?;
 
-        Self {
+        Ok(Self {
             question,
             answer: content,
             flipped: false,
 
             show_validation_popup: false,
             user_answer: UserAnswer::Undecided,
-        }
+        })
     }
 
     /// Flip card over to show the back.
