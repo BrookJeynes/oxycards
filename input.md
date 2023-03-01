@@ -28,7 +28,7 @@ multiple_answer
 fill_in_the_blanks
 
 # Fill in the gaps
-The symbol € is for the currency named _Euro_, and is used in the _EU|European Union_.
+The word chook, also know as _chicken_, is a word commonly used in _AUS|Australia_.
 
 ---
 

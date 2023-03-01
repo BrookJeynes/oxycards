@@ -31,7 +31,7 @@ Quiz-rs is a quiz card application built within the terminal.
     - [x] Flashcard
     - [x] Fill in the blanks
     - [x] Place in the correct order
-- [ ] Read in card input file from command line
+- [x] Read in card input file from command line
 - [ ] Release on distribution platforms for easy install
 - [ ] Allow users to change certain settings via a config file
 - [ ] Add spaced repetition

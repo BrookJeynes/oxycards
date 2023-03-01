@@ -5,7 +5,6 @@ use clap::Parser;
 use models::args::Args;
 
 use core::fmt;
-use std::io::stdout;
 use std::path::Path;
 use std::{error::Error, fs, io};
 
