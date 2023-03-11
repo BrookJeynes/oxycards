@@ -51,7 +51,7 @@ impl FillInTheBlanks {
             question,
             content: re.replace_all(content.as_ref(), "__").to_string(),
             answers,
-            output: re.replace_all(content.as_ref(), "").to_string(),
+            output: re.replace_all(content.as_ref(), "_").to_string(),
             user_input,
             blank_index: 0,
             user_answer: UserAnswer::Undecided,
@@ -97,7 +97,7 @@ impl FillInTheBlanks {
             .enumerate()
             .map(|(index, item)| {
                 format!(
-                    "{}{}",
+                    "{}{}_",
                     item,
                     self.user_input.get(index).unwrap_or(&String::new())
                 )

@@ -248,7 +248,7 @@ checksum = "9b7820b9daea5457c9f21c69448905d723fbd21136ccf521748f23fd49e723ee"
 
 [[package]]
 name = "oxycards"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "clap",
  "crossterm 0.26.0",
@@ -317,17 +317,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d727cae5b39d21da60fa540906919ad737832fe0b1c165da3a34d6548c849d6"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "quiz-rs"
-version = "1.0.0"
-dependencies = [
- "clap",
- "crossterm 0.26.0",
- "rand",
- "regex",
- "tui",
 ]
 
 [[package]]

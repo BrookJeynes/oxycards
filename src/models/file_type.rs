@@ -1,4 +1,5 @@
 use core::fmt;
+use std::ffi::OsStr;
 
 #[derive(PartialEq)]
 pub enum FileType {
@@ -6,11 +7,12 @@ pub enum FileType {
 }
 
 impl FileType {
-    pub fn from_str(file_extension: &str) -> Option<Self> {
-        match file_extension {
-            "md" => Some(FileType::Markdown),
-            _ => None,
+    pub fn from_osstr(file_extension: &OsStr) -> Option<Self> {
+        if file_extension == "md" {
+            return Some(FileType::Markdown);
         }
+
+        None
     }
 }
 

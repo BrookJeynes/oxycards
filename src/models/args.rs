@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, path::Path};
+use std::path::Path;
 
 use clap::Parser;
 
@@ -16,9 +16,9 @@ pub struct Args {
 
 impl Args {
     pub fn validate_file(file: &Path) -> Result<(), FileError> {
-        match file.extension().and_then(OsStr::to_str) {
+        match file.extension() {
             Some(extension) => {
-                if let Some(_) = FileType::from_str(extension) {
+                if let Some(_) = FileType::from_osstr(extension) {
                     return Ok(());
                 }
             }
