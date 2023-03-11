@@ -1,8 +1,7 @@
+use crate::Errors;
 use core::fmt;
 
-use crossterm::style::Stylize;
-
-use crate::{reset_terminal, UserAnswer};
+use crate::UserAnswer;
 
 use super::{
     card_types::{
@@ -74,33 +73,19 @@ macro_rules! parse_cards {
                             .collect::<Vec<&str>>();
 
                         if sections.is_empty() {
-                            eprintln!(
-                                "{}: {}",
-                                "Parsing Error".red().bold(),
-                                ParsingError::IncorrectDivider
-                            );
-                            reset_terminal().unwrap();
-                            std::process::exit(1);
+                            Errors::throw_parsing_error(ParsingError::IncorrectDivider)
                         }
 
                         match sections[0].to_lowercase().as_str() {
                             $($card_type => Card::$card_variant(
                                 $card_variant::parse_raw(sections[1].to_string()).unwrap_or_else(
                                     |err| {
-                                        eprintln!("{}: {}", "Parsing Error".red().bold(), err);
-                                        reset_terminal().unwrap();
-                                        std::process::exit(1);
+                                        Errors::throw_parsing_error(err)
                                     },
                                 ),
                             )),*,
                             _ => {
-                                eprintln!(
-                                    "{}: {}",
-                                    "Parsing Error".red().bold(),
-                                    ParsingError::NoCardType
-                                );
-                                reset_terminal().unwrap();
-                                std::process::exit(1);
+                                Errors::throw_parsing_error(ParsingError::NoCardType)
                             }
                         }
                     })

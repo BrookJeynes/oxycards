@@ -1,6 +1,6 @@
 [package]
 name = "oxycards"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 authors = ["Brook Jeynes jeynesbrook@pm.me", "twny hitawnie@gmail.com"]
 license = "MIT"
