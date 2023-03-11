@@ -3,14 +3,13 @@ pub mod ui;
 
 use clap::Parser;
 use models::args::Args;
+use models::errors::errors::Errors;
 
-use core::fmt;
 use std::path::Path;
 use std::{error::Error, fs, io};
 
 use crossterm::event::{self, Event, KeyCode};
 use crossterm::execute;
-use crossterm::style::Stylize;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
@@ -52,18 +51,6 @@ impl Default for Score {
     }
 }
 
-pub enum FileError {
-    InvalidFileType,
-}
-
-impl fmt::Display for FileError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            FileError::InvalidFileType => write!(f, "Invalid file type"),
-        }
-    }
-}
-
 pub struct AppState {
     pub cards: StatefulList<Card>,
     pub input_mode: InputMode,
@@ -89,19 +76,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let path = Path::new(&args.path);
 
     if let Err(err) = Args::validate_file(path) {
-        eprintln!("{}: {}", "Parsing Error".red().bold(), err);
-        reset_terminal().unwrap();
-        std::process::exit(1);
+        Errors::throw_file_error(err)
     };
 
     let content = read_from_file(path)?;
     let cards = match Card::card_parser(content) {
         Ok(cards) => cards,
-        Err(err) => {
-            eprintln!("{}: {}", "Parsing Error".red().bold(), err);
-            reset_terminal().unwrap();
-            std::process::exit(1);
-        }
+        Err(err) => Errors::throw_parsing_error(err),
     };
 
     let mut terminal = init_terminal()?;

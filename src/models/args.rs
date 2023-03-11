@@ -2,9 +2,7 @@ use std::path::Path;
 
 use clap::Parser;
 
-use crate::FileError;
-
-use super::file_type::FileType;
+use super::{errors::file_error::FileError, file_type::FileType};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
